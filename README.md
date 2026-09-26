@@ -2,7 +2,7 @@
 
 A free, 5-step web tool that helps a car owner decide whether to repair their current car or trade it in. It's built as one self-contained web page for Safe Travels Mobile Repair (Middletown / Port Monmouth, NJ).
 
-**Status:** built and tested, not live yet. See [Launch checklist](#launch-checklist).
+**Status (Sep 26, 2026):** built and tested. A test page exists at **besafetravels.com/fix-or-trade**, but it's **disabled (not live)**. See [Status & next steps](#status--next-steps).
 
 | File | What it is |
 |---|---|
@@ -145,6 +145,18 @@ HTML embeds work on the current website plan, and the live `/calculator` page is
 
 If the Embed Block refuses the snippet, for example because it's too long, try a **Code Block** instead. It takes the same paste.
 
+### What you can and can't format in Squarespace
+The tool runs in its own sealed frame, so Squarespace's drag-and-drop editor only controls what's **around** it:
+
+| Change it in Squarespace (no code) | Needs a code change in `index.html` (ask Claude) |
+|---|---|
+| Block width and position; the section's width and spacing | Colors, fonts and button styles inside the tool |
+| The section background behind the tool | Wording of questions, results and disclaimer |
+| Page title, SEO description and URL | The tool's own logo and "Fix it, or trade it in?" heading. Hide them if the page already has a heading. |
+| Text, images or buttons above and below the tool | The tool's light-blue page background and inner width (640px) |
+
+Tip: put the tool in a full-width section with no padding and let the tool supply its own background. Or tell Claude to make its background transparent, so your Squarespace section color shows through.
+
 ### Option 2: hosted + small embed (once GitHub Pages is on)
 Host the tool (section 4), then paste the much shorter `embed.html` instead. Future changes go live by pushing to GitHub, with no re-pasting in Squarespace. If you set up a custom domain, change the iframe `src` and `TOOL_ORIGIN` in `embed.html` to match it.
 
@@ -174,11 +186,30 @@ The result page includes a disclaimer written with New Jersey in mind:
 - [ ] Turn off the network and press Send to confirm the email fallback link appears.
 - [ ] Check dark mode.
 
-## Launch checklist
-- [ ] Create this public repo and turn on GitHub Pages (section 4)
-- [ ] Optional: set up `tools.besafetravels.com`
-- [ ] Activate FormSubmit, or switch to Formspree (section 3)
-- [ ] Attorney review of the disclaimer and privacy wording (section 6)
-- [ ] Spot-check trade-in values for your most common customer cars
-- [ ] Add it to a Squarespace page and run the live-page tests (section 5)
-- [ ] Add the tool to your privacy and AI usage policies
+## Status & next steps
+
+### Where things stand (Sep 26, 2026)
+| Item | Status |
+|---|---|
+| Tool (`index.html`) | Built and tested: 5 steps, condition and rust, net trade-in cost, ~500 models, print/PDF, send form with bot trap and email/US phone checks |
+| This repo | Public, `main` branch |
+| GitHub Pages hosting | Files ready; **needs turning on** (section 4). Not yet confirmed working. |
+| Squarespace test page | `besafetravels.com/fix-or-trade` made with an **older** paste-in snippet. It "kinda worked" and the page is **disabled**. |
+| Where leads go | FormSubmit → info@besafetravels.com. **Not activated yet.** Decision pending: stay with FormSubmit, or use Apps Script → the calculator's Google Sheet. |
+| Disclaimer | Drafted; **needs attorney review** |
+
+### Next steps, in order
+1. **Write down what "kinda worked" meant.** Note anything odd on the test page: layout, spacing, the frame's height, fonts, steps or sending. That tells Claude what to fix, and what's a Squarespace-side formatting change (see [the table in section 5](#what-you-can-and-cant-format-in-squarespace)).
+2. **Turn on GitHub Pages** (Settings → Pages → Deploy from a branch → `main` / root). Confirm https://casssuczeck.github.io/fix-or-trade/ loads.
+3. **Swap the test page to `embed.html`.** It replaces the old snippet, which is missing the bot trap and the email and phone checks. From then on, every update to the tool reaches the page automatically. If `embed.html` doesn't work in Squarespace, paste the current `squarespace-snippet.html` instead.
+4. **Formatting pass.** Adjust the section around the tool in Squarespace. Send Claude any in-tool changes, such as hiding the duplicate heading or using a transparent background.
+5. **Decide where leads go.**
+   - **FormSubmit:** send one test from the page, then click the activation email in info@ (check spam).
+   - **Google Sheet:** share the calculator's Apps Script code or URL and the Sheet's column headers with Claude.
+6. **Attorney review** of the disclaimer and privacy wording (section 6). Add the form service to your privacy and AI usage policies.
+7. **Spot-check values** for the 5–10 cars your customers drive most, against KBB or Edmunds trade-in values.
+8. **Run the live-page tests** (section 5 checklist) on a phone and a desktop, in a private window.
+9. **Go live.** Enable the page, add it to the menu, and link it from `/calculator`, Google Business Profile, social posts and QR codes.
+10. **After launch.** Check that leads arrive weekly for the first month. Refresh the reference values once a year (section 2).
+
+Optional: set up `tools.besafetravels.com` (section 4) so the tool's address matches the site.
