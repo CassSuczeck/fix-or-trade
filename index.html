@@ -470,6 +470,9 @@
   .disclaimer h3{ font-size:12.5px; font-weight:700; color: var(--text-body); margin:14px 0 4px; }
   .disclaimer p{ margin:0 0 8px; }
   .print-only{ display:none; }
+  /* A line is always reserved for the message, so showing or clearing it never moves the form. */
+  .field-err{ color: var(--coral-deep); font-size:12.5px; font-weight:600; line-height:1.4; min-height:1.4em; margin:4px 0 -8px; }
+  .send-box input[aria-invalid="true"]{ border-color: var(--coral-deep); }
   .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
   @media print{
@@ -767,14 +770,16 @@
           <label for="sendName">Your name</label>
           <input type="text" id="sendName" autocomplete="name">
         </div>
-        <div class="row2">
+        <div>
           <div class="field">
             <label for="sendEmail">Email</label>
-            <input type="email" id="sendEmail" autocomplete="email">
+            <input type="email" id="sendEmail" autocomplete="email" maxlength="254" placeholder="you@example.com">
+            <p class="field-err" id="sendEmailErr"></p>
           </div>
           <div class="field">
             <label for="sendPhone">Phone</label>
-            <input type="tel" id="sendPhone" autocomplete="tel">
+            <input type="tel" id="sendPhone" autocomplete="tel" maxlength="25" placeholder="(732) 555-1234">
+            <p class="field-err" id="sendPhoneErr"></p>
           </div>
         </div>
         <div class="field">
@@ -1128,6 +1133,7 @@
     $('applyTrade').checked=true;
     $('sendConsent').checked=false;
     $('sendStatus').className='send-status';
+    ['sendEmail','sendPhone'].forEach(function(id){ showFieldError(id, {ok:true}); });
     showStep(0);
   });
 
@@ -1396,6 +1402,46 @@
     }
   }
 
+  // ---- contact validation ----
+  // Email: a normal-looking address with a real top-level domain (.com, .net, .us, …).
+  // This catches typos; it can't prove the mailbox exists.
+  function checkEmail(v){
+    if(!v) return {ok:true, value:''};
+    var m = /^([A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+)*)@((?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,})$/.exec(v);
+    if(!m || m[1].length > 64) return {ok:false, msg:'Use a format like name@example.com'};
+    return {ok:true, value: m[1] + '@' + m[2].toLowerCase()};
+  }
+  // Phone: a valid US (NANP) number, 10 digits with optional leading 1 and extension.
+  // Area code and exchange can't start with 0 or 1, and can't be N11 codes like 911.
+  function checkPhone(v){
+    if(!v) return {ok:true, value:''};
+    var parts = v.split(/\s*(?:ext\.?|extension|x|#)\s*/i);
+    if(parts.length > 2 || /[^\d\s().+-]/.test(parts[0])) return {ok:false, msg:'Use a format like (732) 555-1234'};
+    var d = parts[0].replace(/\D/g, '');
+    if(d.length === 11 && d.charAt(0) === '1') d = d.slice(1);
+    if(d.length !== 10) return {ok:false, msg:'Needs 10 digits, like (732) 555-1234'};
+    var area = d.slice(0,3), exch = d.slice(3,6);
+    if(!/^[2-9]/.test(area) || /^.11$/.test(area)) return {ok:false, msg:'That area code isn\'t valid'};
+    if(!/^[2-9]/.test(exch) || /^.11$/.test(exch)) return {ok:false, msg:'That number isn\'t valid'};
+    if(/^(\d)\1{9}$/.test(d)) return {ok:false, msg:'Please enter a real phone number'};
+    var ext = parts[1] ? parts[1].replace(/\D/g, '') : '';
+    if(parts[1] !== undefined && (!ext || ext.length > 6)) return {ok:false, msg:'Extension should be 1–6 digits'};
+    return {ok:true, value:'(' + area + ') ' + exch + '-' + d.slice(6) + (ext ? ' ext. ' + ext : '')};
+  }
+  function showFieldError(id, result){
+    var input = $(id), err = $(id + 'Err');
+    input.setAttribute('aria-invalid', result.ok ? 'false' : 'true');
+    err.textContent = result.ok ? '' : result.msg;
+    if(result.ok && result.value) input.value = result.value; // tidy the format, e.g. 7325551234 → (732) 555-1234
+    return result;
+  }
+  // Check when the customer leaves a field, and clear the message as soon as they start fixing it,
+  // so the layout doesn't shift under their cursor when they go to press Send.
+  [['sendEmail', checkEmail], ['sendPhone', checkPhone]].forEach(function(f){
+    $(f[0]).addEventListener('blur', function(){ showFieldError(f[0], f[1](this.value.trim())); });
+    $(f[0]).addEventListener('input', function(){ showFieldError(f[0], {ok:true}); });
+  });
+
   $('sendForm').addEventListener('submit', function(e){
     e.preventDefault();
     if(!lastResult) return;
@@ -1409,10 +1455,15 @@
       setStatus('bad', 'Please add your name and an email or phone number.');
       return;
     }
-    if(contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)){
-      setStatus('bad', 'That email address doesn\'t look right.');
+    var emailCheck = showFieldError('sendEmail', checkEmail(contact.email));
+    var phoneCheck = showFieldError('sendPhone', checkPhone(contact.phone));
+    if(!emailCheck.ok || !phoneCheck.ok){
+      setStatus('bad', 'Please fix the ' + (!emailCheck.ok && !phoneCheck.ok ? 'email and phone number' : (!emailCheck.ok ? 'email address' : 'phone number')) + ' above.');
+      $(!emailCheck.ok ? 'sendEmail' : 'sendPhone').focus();
       return;
     }
+    contact.email = emailCheck.value;
+    contact.phone = phoneCheck.value;
     if(!$('sendConsent').checked){
       setStatus('bad', 'Please check the box so we can reply to you.');
       return;

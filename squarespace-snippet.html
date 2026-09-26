@@ -473,6 +473,9 @@
   .disclaimer h3{ font-size:12.5px; font-weight:700; color: var(--text-body); margin:14px 0 4px; }
   .disclaimer p{ margin:0 0 8px; }
   .print-only{ display:none; }
+  /* A line is always reserved for the message, so showing or clearing it never moves the form. */
+  .field-err{ color: var(--coral-deep); font-size:12.5px; font-weight:600; line-height:1.4; min-height:1.4em; margin:4px 0 -8px; }
+  .send-box input[aria-invalid=&quot;true&quot;]{ border-color: var(--coral-deep); }
   .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
   @media print{
@@ -770,14 +773,16 @@
           &lt;label for=&quot;sendName&quot;&gt;Your name&lt;/label&gt;
           &lt;input type=&quot;text&quot; id=&quot;sendName&quot; autocomplete=&quot;name&quot;&gt;
         &lt;/div&gt;
-        &lt;div class=&quot;row2&quot;&gt;
+        &lt;div&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;sendEmail&quot;&gt;Email&lt;/label&gt;
-            &lt;input type=&quot;email&quot; id=&quot;sendEmail&quot; autocomplete=&quot;email&quot;&gt;
+            &lt;input type=&quot;email&quot; id=&quot;sendEmail&quot; autocomplete=&quot;email&quot; maxlength=&quot;254&quot; placeholder=&quot;you@example.com&quot;&gt;
+            &lt;p class=&quot;field-err&quot; id=&quot;sendEmailErr&quot;&gt;&lt;/p&gt;
           &lt;/div&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;sendPhone&quot;&gt;Phone&lt;/label&gt;
-            &lt;input type=&quot;tel&quot; id=&quot;sendPhone&quot; autocomplete=&quot;tel&quot;&gt;
+            &lt;input type=&quot;tel&quot; id=&quot;sendPhone&quot; autocomplete=&quot;tel&quot; maxlength=&quot;25&quot; placeholder=&quot;(732) 555-1234&quot;&gt;
+            &lt;p class=&quot;field-err&quot; id=&quot;sendPhoneErr&quot;&gt;&lt;/p&gt;
           &lt;/div&gt;
         &lt;/div&gt;
         &lt;div class=&quot;field&quot;&gt;
@@ -1131,6 +1136,7 @@
     $(&#x27;applyTrade&#x27;).checked=true;
     $(&#x27;sendConsent&#x27;).checked=false;
     $(&#x27;sendStatus&#x27;).className=&#x27;send-status&#x27;;
+    [&#x27;sendEmail&#x27;,&#x27;sendPhone&#x27;].forEach(function(id){ showFieldError(id, {ok:true}); });
     showStep(0);
   });
 
@@ -1399,6 +1405,46 @@
     }
   }
 
+  // ---- contact validation ----
+  // Email: a normal-looking address with a real top-level domain (.com, .net, .us, &#8230;).
+  // This catches typos; it can&#x27;t prove the mailbox exists.
+  function checkEmail(v){
+    if(!v) return {ok:true, value:&#x27;&#x27;};
+    var m = /^([A-Za-z0-9!#$%&amp;&#x27;*+\/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&amp;&#x27;*+\/=?^_`{|}~-]+)*)@((?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,})$/.exec(v);
+    if(!m || m[1].length &gt; 64) return {ok:false, msg:&#x27;Use a format like name@example.com&#x27;};
+    return {ok:true, value: m[1] + &#x27;@&#x27; + m[2].toLowerCase()};
+  }
+  // Phone: a valid US (NANP) number, 10 digits with optional leading 1 and extension.
+  // Area code and exchange can&#x27;t start with 0 or 1, and can&#x27;t be N11 codes like 911.
+  function checkPhone(v){
+    if(!v) return {ok:true, value:&#x27;&#x27;};
+    var parts = v.split(/\s*(?:ext\.?|extension|x|#)\s*/i);
+    if(parts.length &gt; 2 || /[^\d\s().+-]/.test(parts[0])) return {ok:false, msg:&#x27;Use a format like (732) 555-1234&#x27;};
+    var d = parts[0].replace(/\D/g, &#x27;&#x27;);
+    if(d.length === 11 &amp;&amp; d.charAt(0) === &#x27;1&#x27;) d = d.slice(1);
+    if(d.length !== 10) return {ok:false, msg:&#x27;Needs 10 digits, like (732) 555-1234&#x27;};
+    var area = d.slice(0,3), exch = d.slice(3,6);
+    if(!/^[2-9]/.test(area) || /^.11$/.test(area)) return {ok:false, msg:&#x27;That area code isn\&#x27;t valid&#x27;};
+    if(!/^[2-9]/.test(exch) || /^.11$/.test(exch)) return {ok:false, msg:&#x27;That number isn\&#x27;t valid&#x27;};
+    if(/^(\d)\1{9}$/.test(d)) return {ok:false, msg:&#x27;Please enter a real phone number&#x27;};
+    var ext = parts[1] ? parts[1].replace(/\D/g, &#x27;&#x27;) : &#x27;&#x27;;
+    if(parts[1] !== undefined &amp;&amp; (!ext || ext.length &gt; 6)) return {ok:false, msg:&#x27;Extension should be 1&#8211;6 digits&#x27;};
+    return {ok:true, value:&#x27;(&#x27; + area + &#x27;) &#x27; + exch + &#x27;-&#x27; + d.slice(6) + (ext ? &#x27; ext. &#x27; + ext : &#x27;&#x27;)};
+  }
+  function showFieldError(id, result){
+    var input = $(id), err = $(id + &#x27;Err&#x27;);
+    input.setAttribute(&#x27;aria-invalid&#x27;, result.ok ? &#x27;false&#x27; : &#x27;true&#x27;);
+    err.textContent = result.ok ? &#x27;&#x27; : result.msg;
+    if(result.ok &amp;&amp; result.value) input.value = result.value; // tidy the format, e.g. 7325551234 &#8594; (732) 555-1234
+    return result;
+  }
+  // Check when the customer leaves a field, and clear the message as soon as they start fixing it,
+  // so the layout doesn&#x27;t shift under their cursor when they go to press Send.
+  [[&#x27;sendEmail&#x27;, checkEmail], [&#x27;sendPhone&#x27;, checkPhone]].forEach(function(f){
+    $(f[0]).addEventListener(&#x27;blur&#x27;, function(){ showFieldError(f[0], f[1](this.value.trim())); });
+    $(f[0]).addEventListener(&#x27;input&#x27;, function(){ showFieldError(f[0], {ok:true}); });
+  });
+
   $(&#x27;sendForm&#x27;).addEventListener(&#x27;submit&#x27;, function(e){
     e.preventDefault();
     if(!lastResult) return;
@@ -1412,10 +1458,15 @@
       setStatus(&#x27;bad&#x27;, &#x27;Please add your name and an email or phone number.&#x27;);
       return;
     }
-    if(contact.email &amp;&amp; !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)){
-      setStatus(&#x27;bad&#x27;, &#x27;That email address doesn\&#x27;t look right.&#x27;);
+    var emailCheck = showFieldError(&#x27;sendEmail&#x27;, checkEmail(contact.email));
+    var phoneCheck = showFieldError(&#x27;sendPhone&#x27;, checkPhone(contact.phone));
+    if(!emailCheck.ok || !phoneCheck.ok){
+      setStatus(&#x27;bad&#x27;, &#x27;Please fix the &#x27; + (!emailCheck.ok &amp;&amp; !phoneCheck.ok ? &#x27;email and phone number&#x27; : (!emailCheck.ok ? &#x27;email address&#x27; : &#x27;phone number&#x27;)) + &#x27; above.&#x27;);
+      $(!emailCheck.ok ? &#x27;sendEmail&#x27; : &#x27;sendPhone&#x27;).focus();
       return;
     }
+    contact.email = emailCheck.value;
+    contact.phone = phoneCheck.value;
     if(!$(&#x27;sendConsent&#x27;).checked){
       setStatus(&#x27;bad&#x27;, &#x27;Please check the box so we can reply to you.&#x27;);
       return;
