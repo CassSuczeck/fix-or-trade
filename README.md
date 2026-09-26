@@ -11,6 +11,7 @@ A free, 5-step web tool that helps a car owner decide whether to repair their cu
 | `build-squarespace-snippet.py` | Rebuilds `squarespace-snippet.html` from `index.html`. |
 | `embed.html` | Short embed for when the tool is hosted on GitHub Pages. |
 | `README.md` | This document. |
+| `TROUBLESHOOTING.md` | Checklist and findings log for the Squarespace embed. |
 
 ---
 
@@ -193,8 +194,8 @@ The result page includes a disclaimer written with New Jersey in mind:
 |---|---|
 | Tool (`index.html`) | Built and tested: 5 steps, condition and rust, net trade-in cost, ~500 models, print/PDF, send form with bot trap and email/US phone checks |
 | This repo | Public, `main` branch |
-| GitHub Pages hosting | Files ready; **needs turning on** (section 4). Not yet confirmed working. |
-| Squarespace test page | `besafetravels.com/fix-or-trade` made with an **older** paste-in snippet. It "kinda worked" and the page is **disabled**. |
+| GitHub Pages hosting | Turned on; first deploy succeeded (1:15 PM ET). The address returned **404** when first checked; see `TROUBLESHOOTING.md`. |
+| Squarespace test page | `besafetravels.com/fix-or-trade` made with an **older** paste-in snippet. It "kinda worked" and the page is **disabled**. Now troubleshooting `embed.html` with Claude in Chrome (`TROUBLESHOOTING.md`). |
 | Where leads go | FormSubmit → info@besafetravels.com. **Not activated yet.** Decision pending: stay with FormSubmit, or use Apps Script → the calculator's Google Sheet. |
 | Disclaimer | Drafted; **needs attorney review** |
 
