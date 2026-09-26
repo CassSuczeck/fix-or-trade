@@ -470,6 +470,7 @@
   .disclaimer h3{ font-size:12.5px; font-weight:700; color: var(--text-body); margin:14px 0 4px; }
   .disclaimer p{ margin:0 0 8px; }
   .print-only{ display:none; }
+  .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
   @media print{
     :root:not([data-theme="light"]), :root[data-theme]{
@@ -779,6 +780,10 @@
         <div class="field">
           <label for="sendNote">Anything else we should know? <span style="font-weight:500;color:var(--text-muted);">(optional)</span></label>
           <textarea id="sendNote"></textarea>
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label for="sendWebsite">Leave this empty</label>
+          <input type="text" id="sendWebsite" name="_honey" tabindex="-1" autocomplete="off">
         </div>
         <label class="checkrow" for="sendConsent">
           <input type="checkbox" id="sendConsent">
@@ -1412,6 +1417,11 @@
       setStatus('bad', 'Please check the box so we can reply to you.');
       return;
     }
+    // Bot trap: people never see this field, so anything in it means a bot filled the form.
+    if($('sendWebsite').value){
+      setStatus('ok', 'Sent! We\'ll be in touch soon.');
+      return;
+    }
     if(!CONFIG.submitEndpoint){
       window.location.href = mailtoFallback(contact);
       return;
@@ -1420,7 +1430,8 @@
     var payload = {
       _subject: 'Fix or trade-in results: ' + contact.name + ' (' + lastResult.verdict + ')',
       _template: 'box',
-      _captcha: 'false',
+      _captcha: 'false', // FormSubmit's captcha needs a page redirect, which this in-page form can't use
+      _honey: '',
       name: contact.name,
       email: contact.email,
       phone: contact.phone,

@@ -107,6 +107,10 @@ var CONFIG = {
 - **Switching to Formspree** (free tier, with an account and dashboard): create a form, then set `submitEndpoint` to `https://formspree.io/f/YOUR_ID`.
 - **If sending fails,** or `submitEndpoint` is `''`, the customer gets an "Email it to us instead" link. It opens their own email app with the results already filled in.
 - **Privacy:** customer contact details pass through the form service. Mention the service in your privacy and AI usage policies.
+- **What gets sent:** name, email, phone, the optional note, and the full results summary (year, make, model, mileage, VIN or plate if entered). There's no address field, though a customer could type one into the note. Nothing is sent until the customer ticks the consent box and presses Send.
+- **Spam protection:** a hidden bot-trap field (`_honey`). People never see it, so if it's filled in, the tool shows "Sent!" but sends nothing. FormSubmit's captcha is turned off (`_captcha: 'false'`) because it only works when the form sends the customer to a FormSubmit page, and this tool sends in the background.
+- **Limits:** whatever address the tool sends to has to be in the page's code, whether it's the raw email, a FormSubmit alias, or an Apps Script URL. So a determined bot can always post to it directly, and the bot trap only stops bots that fill in the form itself. After activation, FormSubmit offers a random-string alias. It keeps the address away from email scrapers, but info@ is public on the site and in the email fallback anyway.
+- **Leads land only in email.** Unlike the /calculator leads, they don't reach the Google Sheet. The alternative is to send them to a Google Apps Script web app like the calculator's, which can add a row to the Sheet and email info@, with no outside service involved.
 
 ## 4. Hosting (GitHub Pages)
 

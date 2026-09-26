@@ -473,6 +473,7 @@
   .disclaimer h3{ font-size:12.5px; font-weight:700; color: var(--text-body); margin:14px 0 4px; }
   .disclaimer p{ margin:0 0 8px; }
   .print-only{ display:none; }
+  .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
   @media print{
     :root:not([data-theme=&quot;light&quot;]), :root[data-theme]{
@@ -782,6 +783,10 @@
         &lt;div class=&quot;field&quot;&gt;
           &lt;label for=&quot;sendNote&quot;&gt;Anything else we should know? &lt;span style=&quot;font-weight:500;color:var(--text-muted);&quot;&gt;(optional)&lt;/span&gt;&lt;/label&gt;
           &lt;textarea id=&quot;sendNote&quot;&gt;&lt;/textarea&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;hp&quot; aria-hidden=&quot;true&quot;&gt;
+          &lt;label for=&quot;sendWebsite&quot;&gt;Leave this empty&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;sendWebsite&quot; name=&quot;_honey&quot; tabindex=&quot;-1&quot; autocomplete=&quot;off&quot;&gt;
         &lt;/div&gt;
         &lt;label class=&quot;checkrow&quot; for=&quot;sendConsent&quot;&gt;
           &lt;input type=&quot;checkbox&quot; id=&quot;sendConsent&quot;&gt;
@@ -1415,6 +1420,11 @@
       setStatus(&#x27;bad&#x27;, &#x27;Please check the box so we can reply to you.&#x27;);
       return;
     }
+    // Bot trap: people never see this field, so anything in it means a bot filled the form.
+    if($(&#x27;sendWebsite&#x27;).value){
+      setStatus(&#x27;ok&#x27;, &#x27;Sent! We\&#x27;ll be in touch soon.&#x27;);
+      return;
+    }
     if(!CONFIG.submitEndpoint){
       window.location.href = mailtoFallback(contact);
       return;
@@ -1423,7 +1433,8 @@
     var payload = {
       _subject: &#x27;Fix or trade-in results: &#x27; + contact.name + &#x27; (&#x27; + lastResult.verdict + &#x27;)&#x27;,
       _template: &#x27;box&#x27;,
-      _captcha: &#x27;false&#x27;,
+      _captcha: &#x27;false&#x27;, // FormSubmit&#x27;s captcha needs a page redirect, which this in-page form can&#x27;t use
+      _honey: &#x27;&#x27;,
       name: contact.name,
       email: contact.email,
       phone: contact.phone,
