@@ -1,0 +1,30 @@
+<!--
+  Safe Travels "Fix it, or trade it in?" — Squarespace embed snippet
+  Paste everything below into an Embed Block (Embed data → Code snippet) or a Code Block.
+  Needs a Squarespace plan that allows iframes and JavaScript in blocks (Core or higher).
+  If you move the tool to your own subdomain, change BOTH the iframe src and TOOL_ORIGIN.
+-->
+<div id="st-fix-or-trade">
+  <iframe
+    src="https://casssuczeck.github.io/fix-or-trade/"
+    title="Fix it, or trade it in? — Safe Travels Mobile Repair"
+    style="display:block;width:100%;height:1150px;border:0;background:transparent;"
+    allow="clipboard-write"
+  ></iframe>
+</div>
+<script>
+(function () {
+  var TOOL_ORIGIN = 'https://casssuczeck.github.io';
+  var frame = document.querySelector('#st-fix-or-trade iframe');
+  window.addEventListener('message', function (e) {
+    if (e.origin !== TOOL_ORIGIN || !e.data || e.source !== frame.contentWindow) return;
+    if (e.data.type === 'st-fix-or-trade-height' && e.data.height > 0) {
+      frame.style.height = e.data.height + 'px';
+    }
+    if (e.data.type === 'st-fix-or-trade-scroll') {
+      var top = frame.getBoundingClientRect().top;
+      if (top < 0) window.scrollBy({ top: top - 90, behavior: 'smooth' });
+    }
+  });
+})();
+</script>

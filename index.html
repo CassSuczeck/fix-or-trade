@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fix It or Trade It In? — Safe Travels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #CDD4F8;
+    --bg-soft: #E4E8FC;
+    --navy: #1B1E5C;
+    --navy-soft: #3A3F86;
+    --blue: #5F72E0;
+    --blue-deep: #4A5CD0;
+    --coral: #F16F55;
+    --coral-deep: #E05A40;
+    --white: #FFFFFF;
+    --card-border: #B9C3F4;
+    --ink-on-blue: #FFFFFF;
+    --text-body: #2A2E5C;
+    --text-muted: #5C63A0;
+    --good: #2E9E6B;
+    --focus: #1B1E5C;
+    --shadow: 0 10px 30px rgba(27,30,92,0.12);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #12142E;
+      --bg-soft: #1B1E44;
+      --navy: #ECEFFF;
+      --navy-soft: #C7CCF5;
+      --blue: #8C9AF5;
+      --blue-deep: #7385F0;
+      --coral: #FF8B72;
+      --coral-deep: #FF7259;
+      --white: #1E2150;
+      --card-border: #383D80;
+      --ink-on-blue: #12142E;
+      --text-body: #E7E9FF;
+      --text-muted: #A7ACDD;
+      --good: #6FDBA6;
+      --focus: #ECEFFF;
+      --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #12142E;
+    --bg-soft: #1B1E44;
+    --navy: #ECEFFF;
+    --navy-soft: #C7CCF5;
+    --blue: #8C9AF5;
+    --blue-deep: #7385F0;
+    --coral: #FF8B72;
+    --coral-deep: #FF7259;
+    --white: #1E2150;
+    --card-border: #383D80;
+    --ink-on-blue: #12142E;
+    --text-body: #E7E9FF;
+    --text-muted: #A7ACDD;
+    --good: #6FDBA6;
+    --focus: #ECEFFF;
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--text-body);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  html.embedded body{ min-height:0; }
+  html.embedded .wrap{ padding-top:8px; }
+  .wrap{
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+  header.top{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom: 22px;
+  }
+  .mark{
+    width:44px;height:44px;flex:0 0 auto;
+  }
+  .wordmark{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size: 22px;
+    color: var(--navy);
+    line-height:1.1;
+  }
+  .wordmark small{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:11px;
+    letter-spacing:0.08em;
+    color: var(--blue-deep);
+  }
+  .title-block{ margin: 6px 0 26px; }
+  h1{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size: 32px;
+    color: var(--navy);
+    margin:0 0 8px;
+    line-height:1.15;
+  }
+  .sub{
+    color: var(--blue-deep);
+    font-weight:600;
+    font-size:16px;
+    margin:0;
+    max-width: 46ch;
+  }
+
+  .progress{
+    display:flex;
+    gap:8px;
+    margin: 24px 0 20px;
+  }
+  .progress .seg{
+    flex:1;
+    height:6px;
+    border-radius:6px;
+    background: var(--card-border);
+    overflow:hidden;
+  }
+  .progress .seg.done, .progress .seg.active{ background: var(--blue); }
+
+  .card{
+    background: var(--white);
+    border: 1.5px solid var(--card-border);
+    border-radius: 20px;
+    padding: 26px 24px;
+    box-shadow: var(--shadow);
+  }
+  .step-label{
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.02em;
+    color: var(--blue-deep);
+    margin: 0 0 6px;
+  }
+  .step-title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
+    font-size:22px;
+    color: var(--navy);
+    margin: 0 0 18px;
+  }
+
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:block;
+    font-weight:600;
+    font-size:14px;
+    color: var(--text-body);
+    margin-bottom:6px;
+  }
+  .hint{
+    font-size:12.5px;
+    color: var(--text-muted);
+    margin-top:5px;
+  }
+  input[type="text"], input[type="number"], select{
+    width:100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid var(--card-border);
+    background: var(--bg-soft);
+    color: var(--text-body);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:500;
+  }
+  input:focus, select:focus, button:focus-visible{
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .row2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+  @media (max-width:480px){ .row2{ grid-template-columns: 1fr; } }
+
+  .toggle{
+    display:flex;
+    background: var(--bg-soft);
+    border: 1.5px solid var(--card-border);
+    border-radius: 12px;
+    padding:4px;
+    gap:4px;
+    margin-bottom:18px;
+  }
+  .toggle button{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:10px 8px;
+    border-radius:9px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    color: var(--text-muted);
+    cursor:pointer;
+  }
+  .toggle button.active{
+    background: var(--blue);
+    color: var(--ink-on-blue);
+  }
+
+  .checkrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border:1.5px solid var(--card-border);
+    border-radius:12px;
+    padding:12px 14px;
+    background: var(--bg-soft);
+    margin-bottom:18px;
+    cursor:pointer;
+  }
+  .checkrow input{ width:18px; height:18px; accent-color: var(--blue); }
+  .checkrow span{ font-size:14px; font-weight:500; color: var(--text-body); }
+
+  .cta-link{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    text-decoration:none;
+    background: var(--coral);
+    color: #fff;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-weight:700;
+    font-size:14.5px;
+    margin-bottom:20px;
+  }
+  .cta-link:hover{ background: var(--coral-deep); }
+  .cta-link .arrow{ font-size:18px; }
+
+  .nav-buttons{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    margin-top: 22px;
+  }
+  button.primary{
+    background: var(--blue);
+    color: var(--ink-on-blue);
+    border:none;
+    padding: 13px 26px;
+    border-radius: 14px;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+  }
+  button.primary:hover{ background: var(--blue-deep); }
+  button.ghost{
+    background:transparent;
+    color: var(--navy-soft);
+    border: 1.5px solid var(--card-border);
+    padding: 13px 22px;
+    border-radius: 14px;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+  }
+  button.ghost:hover{ border-color: var(--blue); color: var(--blue-deep); }
+  button:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  .slider-row{ margin-bottom: 18px; }
+  input[type="range"]{
+    width:100%;
+    accent-color: var(--blue);
+  }
+  .slider-value{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color: var(--text-muted);
+    font-weight:600;
+    margin-top:4px;
+  }
+
+  /* Results */
+  .verdict-card{
+    text-align:center;
+    border-radius: 22px;
+    padding: 32px 24px 28px;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+  .verdict-card.fix{ background: linear-gradient(160deg, var(--navy) 0%, var(--navy-soft) 100%); }
+  .verdict-card.trade{ background: linear-gradient(160deg, var(--coral-deep) 0%, var(--coral) 100%); }
+  .verdict-eyebrow{
+    font-size:13px;
+    font-weight:700;
+    opacity:0.85;
+    margin:0 0 6px;
+  }
+  .verdict-headline{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size: 30px;
+    margin: 0 0 10px;
+  }
+  .verdict-sub{
+    font-size:14.5px;
+    font-weight:500;
+    opacity:0.95;
+    max-width:42ch;
+    margin: 0 auto;
+  }
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+    margin: 20px 0;
+  }
+  @media (max-width:480px){ .stat-grid{ grid-template-columns: 1fr; } }
+  .stat{
+    background: var(--bg-soft);
+    border:1.5px solid var(--card-border);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .stat .k{ font-size:12px; font-weight:700; color: var(--text-muted); margin-bottom:4px; }
+  .stat .v{ font-size:20px; font-weight:700; color: var(--navy); font-family:'Baloo 2', sans-serif; }
+  .stat .d{ font-size:12px; color: var(--text-muted); margin-top:2px; }
+
+  .reasoning{
+    list-style:none;
+    margin:0 0 20px;
+    padding:0;
+  }
+  .reasoning li{
+    display:flex;
+    gap:10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--card-border);
+    font-size:14px;
+    color: var(--text-body);
+  }
+  .reasoning li:first-child{ border-top:none; }
+  .reasoning li .dot{
+    flex:0 0 auto;
+    width:8px;height:8px;border-radius:50%;
+    background: var(--blue);
+    margin-top:6px;
+  }
+
+  details.math{
+    margin-bottom:20px;
+    border:1.5px solid var(--card-border);
+    border-radius:14px;
+    padding: 4px 16px;
+    background: var(--bg-soft);
+  }
+  details.math summary{
+    cursor:pointer;
+    font-weight:700;
+    font-size:13.5px;
+    color: var(--blue-deep);
+    padding:12px 0;
+  }
+  details.math .math-body{ font-size:13px; color: var(--text-muted); padding-bottom:14px; }
+  details.math .math-body p{ margin:6px 0; }
+
+  .disclaimer{
+    font-size:12px;
+    color: var(--text-muted);
+    line-height:1.6;
+    margin-bottom: 18px;
+  }
+
+  .restart{
+    display:block;
+    text-align:center;
+    width:100%;
+    background:transparent;
+    border:none;
+    color: var(--text-muted);
+    font-weight:600;
+    font-size:13px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding: 6px;
+  }
+
+  .step{ display:none; }
+  .step.active{ display:block; }
+
+  .error-msg{
+    color: var(--coral-deep);
+    font-size:13px;
+    font-weight:600;
+    margin: -8px 0 16px;
+    display:none;
+  }
+
+  /* Condition options */
+  fieldset.opts{ border:none; margin:0 0 18px; padding:0; }
+  fieldset.opts legend{ font-weight:600; font-size:14px; color: var(--text-body); margin-bottom:8px; padding:0; }
+  .opt{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    border:1.5px solid var(--card-border);
+    border-radius:12px;
+    padding:11px 14px;
+    background: var(--bg-soft);
+    margin-bottom:8px;
+    cursor:pointer;
+  }
+  .opt input{ width:18px; height:18px; margin-top:2px; accent-color: var(--blue); flex:0 0 auto; }
+  .opt b{ display:block; font-size:14px; font-weight:600; color: var(--text-body); }
+  .opt small{ display:block; font-size:12.5px; color: var(--text-muted); }
+  .opt:has(input:checked){ border-color: var(--blue); }
+  .hint a, .disclaimer a{ color: var(--blue-deep); }
+
+  .answers-block summary{ cursor:pointer; }
+  .answers{ list-style:none; margin:0; padding:0 0 12px; font-size:13px; }
+  .answers li{ display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-top:1px solid var(--card-border); }
+  .answers li:first-child{ border-top:none; }
+  .answers li span:first-child{ color: var(--text-muted); }
+  .answers li span:last-child{ color: var(--text-body); font-weight:600; text-align:right; }
+
+  .result-actions{ display:flex; gap:12px; margin-bottom:20px; }
+  .result-actions button{ flex:1; }
+
+  .send-box{
+    border:1.5px solid var(--card-border);
+    border-radius:16px;
+    padding:18px 16px 6px;
+    background: var(--bg-soft);
+    margin-bottom:20px;
+  }
+  .send-box h3{ font-family:'Baloo 2', sans-serif; font-weight:600; font-size:18px; color: var(--navy); margin:0 0 4px; }
+  .send-box > p{ font-size:13px; color: var(--text-muted); margin:0 0 14px; }
+  .send-box input[type="text"], .send-box input[type="email"], .send-box input[type="tel"], .send-box textarea{
+    width:100%;
+    padding: 11px 13px;
+    border-radius: 12px;
+    border: 1.5px solid var(--card-border);
+    background: var(--white);
+    color: var(--text-body);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+  }
+  .send-box textarea{ min-height:70px; resize:vertical; }
+  .send-box .checkrow{ background: var(--white); align-items:flex-start; }
+  .send-box .checkrow input{ margin-top:2px; flex:0 0 auto; }
+  .send-box .checkrow span{ font-size:12.5px; }
+  .send-status{ font-size:13px; font-weight:600; margin: 0 0 14px; display:none; }
+  .send-status.ok{ color: var(--good); display:block; }
+  .send-status.bad{ color: var(--coral-deep); display:block; }
+  .send-box button.primary{ width:100%; margin-bottom:14px; }
+
+  .disclaimer h3{ font-size:12.5px; font-weight:700; color: var(--text-body); margin:14px 0 4px; }
+  .disclaimer p{ margin:0 0 8px; }
+  .print-only{ display:none; }
+
+  @media print{
+    :root:not([data-theme="light"]), :root[data-theme]{
+      --bg:#fff; --bg-soft:#F4F5FC; --navy:#1B1E5C; --navy-soft:#3A3F86; --blue:#5F72E0; --blue-deep:#4A5CD0;
+      --coral:#F16F55; --coral-deep:#E05A40; --white:#fff; --card-border:#C9CFEF; --text-body:#2A2E5C;
+      --text-muted:#5C63A0; --shadow:none;
+    }
+    body{ background:#fff; }
+    .wrap{ padding:0; max-width:none; }
+    .progress, .title-block .sub, .step-label, .nav-buttons, .result-actions, .send-box, .restart,
+    .cta-link{ display:none !important; }
+    details summary{ list-style:none; cursor:default; }
+    .card{ border:none; box-shadow:none; padding:0; }
+    .verdict-card, .stat{ -webkit-print-color-adjust:exact; print-color-adjust:exact; break-inside:avoid; }
+    details.math, .answers-block{ break-inside:avoid; }
+    .print-only{ display:block; font-size:12px; color: var(--text-muted); margin-bottom:12px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <svg class="mark" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="2" width="44" height="44" rx="12" fill="var(--navy)"/>
+      <path d="M11 29l2.5-8.5A3 3 0 0 1 16.4 18h15.2a3 3 0 0 1 2.9 2.5L37 29" stroke="var(--white)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="9" y="29" width="30" height="6.5" rx="3" stroke="var(--white)" stroke-width="2.2"/>
+      <circle cx="15.5" cy="35.5" r="2.2" fill="var(--white)"/>
+      <circle cx="32.5" cy="35.5" r="2.2" fill="var(--white)"/>
+    </svg>
+    <div class="wordmark">Safe Travels<small>MOBILE REPAIR</small></div>
+  </header>
+
+  <div class="title-block">
+    <h1>Fix it, or trade it in?</h1>
+    <p class="sub">A quick, honest look at the numbers before you sign anything.</p>
+  </div>
+
+  <div class="progress" id="progress">
+    <div class="seg" data-i="0"></div>
+    <div class="seg" data-i="1"></div>
+    <div class="seg" data-i="2"></div>
+    <div class="seg" data-i="3"></div>
+    <div class="seg" data-i="4"></div>
+  </div>
+
+  <div class="card">
+
+    <!-- STEP 1: current car -->
+    <div class="step active" id="step0">
+      <p class="step-label">Step 1 of 5</p>
+      <h2 class="step-title">Tell us about your current car</h2>
+
+      <div class="row2">
+        <div class="field">
+          <label for="year">Model year</label>
+          <input type="number" id="year" inputmode="numeric" placeholder="e.g. 2018" min="1990" max="2027">
+        </div>
+        <div class="field">
+          <label for="mileage">Mileage</label>
+          <input type="number" id="mileage" inputmode="numeric" placeholder="e.g. 82000" min="0">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="make">Make</label>
+        <select id="make"></select>
+      </div>
+
+      <div class="field" id="modelField">
+        <label for="model">Model</label>
+        <select id="model"></select>
+      </div>
+
+      <div class="field" id="categoryField" style="display:none;">
+        <label for="category">Closest category</label>
+        <select id="category"></select>
+        <p class="hint">We don't have your exact model in our reference data, so we'll use a same-category estimate. It'll be wider and less precise.</p>
+      </div>
+
+      <div class="field">
+        <label for="platevin">VIN or plate <span style="font-weight:500;color:var(--text-muted);">(optional, not used in the estimate)</span></label>
+        <input type="text" id="platevin" placeholder="Helps us if you send us your results">
+      </div>
+
+      <p class="error-msg" id="err0">Enter a model year and mileage to continue.</p>
+
+      <div class="nav-buttons">
+        <span></span>
+        <button class="primary" id="next0">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: condition -->
+    <div class="step" id="step1">
+      <p class="step-label">Step 2 of 5</p>
+      <h2 class="step-title">What shape is it in?</h2>
+
+      <fieldset class="opts">
+        <legend>Overall condition</legend>
+        <label class="opt"><input type="radio" name="cond" value="excellent"><span><b>Excellent</b><small>Looks and drives like new, full service history</small></span></label>
+        <label class="opt"><input type="radio" name="cond" value="good" checked><span><b>Good</b><small>Normal wear for its age, no major problems</small></span></label>
+        <label class="opt"><input type="radio" name="cond" value="fair"><span><b>Fair</b><small>Noticeable wear, some things need attention soon</small></span></label>
+        <label class="opt"><input type="radio" name="cond" value="poor"><span><b>Poor</b><small>Several problems, or it's been neglected</small></span></label>
+      </fieldset>
+
+      <fieldset class="opts">
+        <legend>Rust</legend>
+        <label class="opt"><input type="radio" name="rust" value="none" checked><span><b>None that I can see</b></span></label>
+        <label class="opt"><input type="radio" name="rust" value="surface"><span><b>Surface spots</b><small>Small spots or stone chips starting to rust</small></span></label>
+        <label class="opt"><input type="radio" name="rust" value="body"><span><b>Bubbling or holes in the body</b><small>Rocker panels, wheel arches, door bottoms, tailgate</small></span></label>
+        <label class="opt"><input type="radio" name="rust" value="structural"><span><b>Frame, subframe, or brake-line rust</b><small>Flaking or rot underneath, or a mechanic has flagged it</small></span></label>
+        <p class="hint">Road salt makes rust a big deal in New Jersey. Not sure? Choose your best guess. We check underneath during any Safe Travels visit.</p>
+      </fieldset>
+
+      <fieldset class="opts">
+        <legend>Electronics &amp; software <span style="font-weight:500;color:var(--text-muted);">(check any that apply)</span></legend>
+        <label class="opt"><input type="checkbox" class="sw" value="Warning lights or electrical glitches that keep coming back"><span><b>Warning lights or electrical glitches that keep coming back</b></span></label>
+        <label class="opt"><input type="checkbox" class="sw" value="Screen, infotainment, camera, or phone-connection problems"><span><b>Screen, infotainment, camera, or phone-connection problems</b></span></label>
+        <label class="opt"><input type="checkbox" class="sw" value="Driver-assist or sensor faults"><span><b>Driver-assist or sensor faults</b><small>Lane keeping, blind spot, parking sensors, adaptive cruise</small></span></label>
+      </fieldset>
+
+      <div class="field" id="warrantyField" style="display:none;">
+        <label for="warranty">Is it still under factory warranty?</label>
+        <select id="warranty">
+          <option value="unsure">Not sure</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+        <p class="hint">Software problems are often fixed free under a recall or warranty. Check your VIN at <a href="https://www.nhtsa.gov/recalls" target="_blank" rel="noopener">nhtsa.gov/recalls</a>.</p>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="ghost" id="back1">Back</button>
+        <button class="primary" id="next1">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: repair situation -->
+    <div class="step" id="step2">
+      <p class="step-label">Step 3 of 5</p>
+      <h2 class="step-title">What's it need right now?</h2>
+
+      <a class="cta-link" href="https://www.besafetravels.com/calculator" target="_blank" rel="noopener">
+        <span>Get a free repair quote from Safe Travels</span>
+        <span class="arrow">↗</span>
+      </a>
+
+      <label class="checkrow" for="noRepair">
+        <input type="checkbox" id="noRepair">
+        <span>No known repairs — I'm just weighing my options</span>
+      </label>
+
+      <div class="field" id="repairField">
+        <label for="repairCost">Repair quote amount ($)</label>
+        <input type="number" id="repairCost" inputmode="numeric" placeholder="e.g. 1800" min="0">
+        <p class="hint">Use the quote from the link above, or your mechanic's estimate.</p>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="ghost" id="back2">Back</button>
+        <button class="primary" id="next2">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: new car -->
+    <div class="step" id="step3">
+      <p class="step-label">Step 4 of 5</p>
+      <h2 class="step-title">The car you're considering</h2>
+
+      <div class="toggle" role="tablist">
+        <button type="button" id="tabPayment" class="active">I know my payment</button>
+        <button type="button" id="tabPrice">Enter price &amp; terms</button>
+      </div>
+
+      <div id="paymentMode">
+        <div class="row2">
+          <div class="field">
+            <label for="knownPayment">Monthly payment ($)</label>
+            <input type="number" id="knownPayment" inputmode="numeric" placeholder="e.g. 480" min="0">
+          </div>
+          <div class="field">
+            <label for="knownTerm">Term (months)</label>
+            <input type="number" id="knownTerm" inputmode="numeric" placeholder="e.g. 36" min="1" value="36">
+          </div>
+        </div>
+        <div class="field">
+          <label for="knownDown">Cash down or due at signing ($)</label>
+          <input type="number" id="knownDown" inputmode="numeric" placeholder="e.g. 2000" min="0" value="0">
+        </div>
+        <label class="checkrow" for="paymentHasTrade">
+          <input type="checkbox" id="paymentHasTrade">
+          <span>This payment already includes my trade-in</span>
+        </label>
+      </div>
+
+      <div id="priceMode" style="display:none;">
+        <div class="row2">
+          <div class="field">
+            <label for="price">Vehicle price ($)</label>
+            <input type="number" id="price" inputmode="numeric" placeholder="e.g. 32000" min="0">
+          </div>
+          <div class="field">
+            <label for="down">Cash down ($)</label>
+            <input type="number" id="down" inputmode="numeric" placeholder="e.g. 3000" min="0" value="0">
+            <p class="hint">Don't include your trade-in. We add it below.</p>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="apr">Interest rate (APR %)</label>
+            <input type="number" id="apr" inputmode="decimal" placeholder="e.g. 6.5" min="0" step="0.1" value="6.5">
+          </div>
+          <div class="field">
+            <label for="term">Term (months)</label>
+            <input type="number" id="term" inputmode="numeric" placeholder="e.g. 60" min="1" value="60">
+          </div>
+        </div>
+        <label class="checkrow" for="applyTrade">
+          <input type="checkbox" id="applyTrade" checked>
+          <span>Put my estimated trade-in value toward this car</span>
+        </label>
+      </div>
+
+      <div class="slider-row">
+        <label for="horizon">How far ahead are you comparing?</label>
+        <input type="range" id="horizon" min="12" max="84" step="6" value="36">
+        <div class="slider-value"><span>1 yr</span><span id="horizonOut">3 years</span><span>7 yrs</span></div>
+      </div>
+
+      <p class="error-msg" id="err3">Enter a payment or a price to continue.</p>
+
+      <div class="nav-buttons">
+        <button class="ghost" id="back3">Back</button>
+        <button class="primary" id="next3">See my result</button>
+      </div>
+    </div>
+
+    <!-- STEP 5: result -->
+    <div class="step" id="step4">
+      <p class="step-label">Step 5 of 5</p>
+      <h2 class="step-title">Here's what the numbers say</h2>
+      <p class="print-only" id="printDate"></p>
+
+      <div id="verdictCard" class="verdict-card">
+        <p class="verdict-eyebrow" id="verdictEyebrow">OUR READ</p>
+        <p class="verdict-headline" id="verdictHeadline">—</p>
+        <p class="verdict-sub" id="verdictSub"></p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="k">Estimated trade-in value</div>
+          <div class="v" id="statTradeIn">—</div>
+          <div class="d" id="statTradeInConf"></div>
+        </div>
+        <div class="stat">
+          <div class="k">Repair as % of that value</div>
+          <div class="v" id="statRatio">—</div>
+          <div class="d">lower is stronger for fixing</div>
+        </div>
+        <div class="stat">
+          <div class="k">Cost to keep &amp; fix</div>
+          <div class="v" id="statFixTotal">—</div>
+          <div class="d" id="statFixSub"></div>
+        </div>
+        <div class="stat">
+          <div class="k">Net cost to trade in &amp; replace</div>
+          <div class="v" id="statTradeTotal">—</div>
+          <div class="d" id="statTradeSub"></div>
+        </div>
+      </div>
+
+      <ul class="reasoning" id="reasoningList"></ul>
+
+      <details class="math answers-block">
+        <summary>Your answers</summary>
+        <ul class="answers" id="answersList"></ul>
+      </details>
+
+      <details class="math">
+        <summary>How we calculated this</summary>
+        <div class="math-body" id="mathBody"></div>
+      </details>
+
+      <div class="result-actions">
+        <button class="ghost" id="printBtn" type="button">Print or save as PDF</button>
+      </div>
+
+      <form class="send-box" id="sendForm" novalidate>
+        <h3>Want a second opinion?</h3>
+        <p>Send these results to Safe Travels and we'll get back to you. Nothing is sent unless you press the button.</p>
+        <div class="field">
+          <label for="sendName">Your name</label>
+          <input type="text" id="sendName" autocomplete="name">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="sendEmail">Email</label>
+            <input type="email" id="sendEmail" autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="sendPhone">Phone</label>
+            <input type="tel" id="sendPhone" autocomplete="tel">
+          </div>
+        </div>
+        <div class="field">
+          <label for="sendNote">Anything else we should know? <span style="font-weight:500;color:var(--text-muted);">(optional)</span></label>
+          <textarea id="sendNote"></textarea>
+        </div>
+        <label class="checkrow" for="sendConsent">
+          <input type="checkbox" id="sendConsent">
+          <span>I agree that Safe Travels Mobile Repair can use my answers and contact details to reply to me about this estimate.</span>
+        </label>
+        <p class="send-status" id="sendStatus" role="status"></p>
+        <button class="primary" type="submit" id="sendBtn">Send my results to Safe Travels</button>
+      </form>
+
+      <a class="cta-link" id="resultCta" href="https://www.besafetravels.com" target="_blank" rel="noopener">
+        <span id="resultCtaText">Book with Safe Travels</span>
+        <span class="arrow">↗</span>
+      </a>
+
+      <div class="disclaimer">
+        <h3>Important: this is an estimate, not an offer</h3>
+        <p>This tool gives a rough, directional comparison. It's based on general depreciation and upkeep patterns and on what you enter. It is not a vehicle appraisal, a trade-in or purchase offer, a written repair estimate, a credit offer, or financial or legal advice. Condition, trim, options, history, market conditions and your credit all change the real numbers. Before you decide, get a written trade-in offer from a dealer and a written repair estimate.</p>
+        <h3>Costs not included</h3>
+        <p>The "trade in &amp; replace" figure does not include New Jersey sales tax (currently 6.625%), NJ MVC title and registration fees, dealer documentary or other fees, insurance, or any loan balance you still owe on your current car. Those costs vary by vehicle, dealer and driver, and they will make buying a vehicle cost more than shown here. Insurance and registration can differ a lot between your current car and a newer one, so ask your insurer and the dealer for exact figures.</p>
+        <h3>Financing</h3>
+        <p>Payments calculated from a price, APR and term are for illustration only. Your actual rate and terms depend on your lender and credit approval.</p>
+        <h3>Rust, safety &amp; recalls</h3>
+        <p>Only a hands-on inspection can confirm rust damage or whether a car is safe to drive. If you suspect frame or brake-line rust, have it inspected before you spend money on other repairs. Check open recalls for free at <a href="https://www.nhtsa.gov/recalls" target="_blank" rel="noopener">nhtsa.gov/recalls</a>.</p>
+        <h3>About us</h3>
+        <p>Safe Travels Mobile Repair is an auto repair business, not a car dealer or lender. We may earn money if you choose to repair your car with us, so feel free to get a second opinion.</p>
+        <h3>Your information</h3>
+        <p>Your answers stay in your browser unless you choose to send them to us. If you do, we use them only to reply to your request.</p>
+      </div>
+
+      <button class="restart" id="restart">Start over with different numbers</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- Embedding: when shown in an iframe (e.g. a Squarespace embed block), tell the
+  // host page our height so the frame grows and shrinks with each step. See embed.html.
+  var EMBEDDED = window.parent !== window;
+  if(EMBEDDED){
+    document.documentElement.classList.add('embedded');
+    var lastHeight = 0;
+    var sendHeight = function(){
+      var h = Math.ceil(document.body.getBoundingClientRect().height);
+      if(h !== lastHeight){ lastHeight = h; window.parent.postMessage({type:'st-fix-or-trade-height', height:h}, '*'); }
+    };
+    if('ResizeObserver' in window) new ResizeObserver(sendHeight).observe(document.body);
+    window.addEventListener('load', sendHeight);
+  }
+
+  // ---- Configuration ----
+  var CONFIG = {
+    leadEmail: 'info@besafetravels.com',
+    // Form-to-email service that delivers "Send my results" submissions to leadEmail.
+    // FormSubmit needs no account: the first submission sends an activation email to leadEmail.
+    // Swap for your website's own form handler if you have one. Set to '' to use only the email-app fallback.
+    submitEndpoint: 'https://formsubmit.co/ajax/info@besafetravels.com'
+  };
+
+  // ---- Reference data ----
+  // Values are estimated trade-in values for an 8-year-old car (2018 model year, priced in 2026).
+  var ANCHOR_AGE = 8;
+
+  var SEGMENTS = {
+    sub:    {label:"Subcompact car", base:5500},
+    car:    {label:"Compact car", base:8000},
+    mid:    {label:"Midsize sedan", base:9500},
+    full:   {label:"Full-size sedan", base:10500},
+    sport:  {label:"Sports car", base:14000},
+    perf:   {label:"High-performance car", base:30000},
+    xsuv:   {label:"Subcompact SUV / crossover", base:8500},
+    csuv:   {label:"Compact SUV / crossover", base:11000},
+    msuv:   {label:"Midsize SUV", base:13500},
+    fsuv:   {label:"Full-size SUV", base:19000},
+    van:    {label:"Minivan", base:10500},
+    mtruck: {label:"Compact / midsize pickup", base:16500},
+    ftruck: {label:"Full-size pickup", base:19000},
+    hd:     {label:"Heavy-duty pickup", base:26000},
+    cvan:   {label:"Cargo / passenger van", base:14000},
+    lcar:   {label:"Luxury compact sedan / coupe", base:9500},
+    lmid:   {label:"Luxury midsize or full-size sedan", base:12500},
+    lsuv:   {label:"Luxury compact SUV", base:11500},
+    lmsuv:  {label:"Luxury midsize SUV", base:15000},
+    lfsuv:  {label:"Luxury full-size SUV", base:24000},
+    ev:     {label:"Electric car", base:9000},
+    evsuv:  {label:"Electric SUV or truck", base:14000},
+    exotic: {label:"Exotic / supercar", base:45000}
+  };
+
+  // Brand value factor (f) and models as "Model:segment" or "Model:segment:model-factor".
+  // old:true marks brands no longer sold new in North America.
+  var BRANDS = {
+    "Acura": {f:0.95, m:"ILX:lcar,Integra:lcar,TLX:lcar,TL:lcar,TSX:lcar,RLX:lmid,RL:lmid,RSX:car,RDX:lsuv,MDX:lmsuv,ZDX:evsuv,NSX:exotic:0.8"},
+    "Alfa Romeo": {f:0.65, m:"Giulia:lcar,Stelvio:lsuv,Tonale:lsuv,4C:sport:2"},
+    "Aston Martin": {f:1.6, m:"Vantage:exotic,DB11:exotic,DB12:exotic,DBS:exotic,DBX:exotic"},
+    "Audi": {f:0.8, m:"A3:lcar,A4:lcar,A5:lcar,A6:lmid,A7:lmid:1.2,A8:lmid:1.3,S3:lcar:1.2,S4:lcar:1.2,S5:lcar:1.3,RS 5:perf:0.9,RS 7:perf:1.3,TT:sport,R8:exotic:0.9,Q3:lsuv:0.85,Q4 e-tron:evsuv:1.3,Q5:lsuv,Q7:lmsuv,Q8:lmsuv:1.3,e-tron / Q8 e-tron:evsuv:1.2,e-tron GT:ev:2.5,A6 allroad:lmid"},
+    "Bentley": {f:2.0, m:"Continental GT:exotic,Flying Spur:exotic,Bentayga:exotic"},
+    "BMW": {f:0.8, m:"2 Series:lcar,3 Series:lcar,4 Series:lcar:1.1,5 Series:lmid,7 Series:lmid:1.3,8 Series:lmid:1.6,M2:perf:0.9,M3:perf,M4:perf,M5:perf:1.1,Z4:sport:1.4,X1:lsuv:0.85,X2:lsuv:0.85,X3:lsuv,X4:lsuv:1.1,X5:lmsuv,X6:lmsuv:1.1,X7:lfsuv:0.9,XM:exotic,i3:ev:0.7,i4:ev:2,i5:ev:2.5,i7:ev:3.5,iX:evsuv:2.2"},
+    "Buick": {f:0.8, m:"Encore:xsuv,Encore GX:xsuv,Envista:xsuv,Envision:csuv,Enclave:msuv,Regal:mid,LaCrosse:full,Verano:car,Lucerne:full,LeSabre:full"},
+    "Cadillac": {f:0.75, m:"ATS:lcar,CT4:lcar,CTS:lmid,CT5:lmid,CT6:lmid:1.2,XTS:lmid,DTS:lmid,SRX:lsuv,XT4:lsuv,XT5:lmsuv,XT6:lmsuv,Escalade:lfsuv:1.2,Lyriq:evsuv:1.6,Optiq:evsuv:1.4"},
+    "Chevrolet": {f:0.95, m:"Spark:sub,Sonic:sub,Aveo:sub,Cruze:car,Cobalt:car,Volt:car,Bolt EV:ev,Bolt EUV:ev,Malibu:mid,Impala:full,Camaro:sport:1.2,Corvette:perf:1.2,Trax:xsuv,Trailblazer:xsuv,Equinox:csuv,Equinox EV:evsuv,Blazer:msuv,Blazer EV:evsuv:1.2,Traverse:msuv,Tahoe:fsuv:1.1,Suburban:fsuv:1.15,Colorado:mtruck,Silverado 1500:ftruck,Silverado EV:evsuv:1.8,Silverado 2500HD / 3500HD:hd,Avalanche:ftruck,Express:cvan"},
+    "Chrysler": {f:0.75, m:"200:mid,300:full,Sebring:mid,PT Cruiser:car,Pacifica:van,Voyager:van,Town & Country:van"},
+    "Dodge": {f:0.85, m:"Dart:car,Avenger:mid,Charger:full,Challenger:sport:1.1,Viper:exotic:0.9,Journey:csuv,Hornet:csuv,Durango:msuv,Grand Caravan:van,Dakota:mtruck"},
+    "Ferrari": {f:4.0, m:"Roma:exotic,Portofino:exotic,F8:exotic,296:exotic,812:exotic:1.5,SF90:exotic:1.5,Purosangue:exotic:1.5"},
+    "Fiat": {f:0.6, m:"500:sub,500L:sub,500X:xsuv,500e:ev:0.6,124 Spider:sport"},
+    "Ford": {f:0.95, m:"Fiesta:sub,Focus:car,Fusion:mid,Taurus:full,Crown Victoria:full,Mustang:sport:1.1,Mustang Mach-E:evsuv:1.3,EcoSport:xsuv,Escape:csuv,Bronco Sport:csuv,Bronco:msuv:1.3,Edge:msuv,Explorer:msuv,Flex:msuv,Expedition:fsuv,Maverick:mtruck,Ranger:mtruck,F-150:ftruck,F-150 Lightning:evsuv:2,Super Duty (F-250 / F-350):hd,Transit:cvan,Transit Connect:cvan:0.7,E-Series:cvan"},
+    "Genesis": {f:0.75, m:"G70:lcar,G80:lmid,G90:lmid:1.3,GV60:evsuv,GV70:lsuv:1.2,GV80:lmsuv:1.2"},
+    "GMC": {f:1.0, m:"Terrain:csuv,Acadia:msuv,Envoy:msuv,Yukon:fsuv:1.1,Yukon XL:fsuv:1.15,Canyon:mtruck,Sierra 1500:ftruck:1.05,Sierra HD:hd,Hummer EV:evsuv:3,Savana:cvan"},
+    "Honda": {f:1.1, m:"Fit:sub,Insight:car,Civic:car,CR-Z:sub,Accord:mid,Clarity:mid:0.7,S2000:sport:1.5,HR-V:xsuv,CR-V:csuv,Element:csuv,Passport:msuv,Pilot:msuv,Prologue:evsuv,Odyssey:van,Ridgeline:mtruck"},
+    "Hyundai": {f:0.85, m:"Accent:sub,Elantra:car,Veloster:car,Ioniq:car,Ioniq 5:evsuv,Ioniq 6:ev:1.3,Sonata:mid,Azera:full,Genesis sedan:lmid,Venue:xsuv,Kona:xsuv,Kona Electric:ev,Tucson:csuv,Santa Fe:msuv,Palisade:msuv:1.1,Santa Cruz:mtruck"},
+    "Infiniti": {f:0.75, m:"G35 / G37:lcar,Q50:lcar,Q60:lcar:1.1,Q70:lmid,QX30:lsuv,QX50:lsuv,QX55:lsuv,QX60:lmsuv,QX80:lfsuv"},
+    "Jaguar": {f:0.65, m:"XE:lcar,XF:lmid,XJ:lmid:1.2,F-Type:perf,E-Pace:lsuv,F-Pace:lsuv,I-Pace:evsuv"},
+    "Jeep": {f:0.95, m:"Renegade:xsuv,Compass:csuv,Patriot:csuv,Cherokee:csuv,Liberty:csuv,Grand Cherokee:msuv,Commander:msuv,Wrangler:msuv:1.2,Gladiator:mtruck,Wagoneer:fsuv:1.1,Grand Wagoneer:lfsuv"},
+    "Kia": {f:0.85, m:"Rio:sub,Forte:car,Soul:car,Optima:mid,K5:mid,Stinger:mid:1.3,Cadenza:full,K900:lmid,Seltos:xsuv,Niro:xsuv,Sportage:csuv,Sorento:msuv,Telluride:msuv:1.2,Sedona:van,Carnival:van,EV6:evsuv,EV9:evsuv:1.4"},
+    "Lamborghini": {f:4.0, m:"Huracán:exotic,Urus:exotic,Aventador:exotic:1.5,Revuelto:exotic:2"},
+    "Land Rover": {f:0.7, m:"Range Rover:lfsuv:1.3,Range Rover Sport:lmsuv:1.3,Range Rover Velar:lsuv:1.2,Range Rover Evoque:lsuv,Discovery:lmsuv,Discovery Sport:lsuv,Defender:lmsuv:1.5,LR4:lmsuv"},
+    "Lexus": {f:1.15, m:"CT:lcar,IS:lcar,RC:lcar,ES:lmid,GS:lmid,LS:lmid:1.2,LC:perf,UX:lsuv,NX:lsuv,RX:lmsuv,GX:lmsuv:1.2,TX:lmsuv,LX:lfsuv:1.3,RZ:evsuv"},
+    "Lincoln": {f:0.8, m:"MKZ:lmid,Continental:lmid,Town Car:lmid,MKC:lsuv,Corsair:lsuv,MKX:lmsuv,Nautilus:lmsuv,MKT:lmsuv,Aviator:lmsuv:1.2,Navigator:lfsuv"},
+    "Lucid": {f:0.6, m:"Air:ev:3,Gravity:evsuv:3"},
+    "Maserati": {f:0.6, m:"Ghibli:lmid,Quattroporte:lmid:1.2,Levante:lmsuv,Grecale:lsuv:1.4"},
+    "Mazda": {f:1.0, m:"Mazda3:car,Mazda6:mid,MX-5 Miata:sport,RX-8:sport:0.6,CX-3:xsuv,CX-30:xsuv,CX-5:csuv,CX-50:csuv,CX-7:csuv,CX-9:msuv,CX-70:msuv,CX-90:msuv,MX-30:ev:0.6"},
+    "McLaren": {f:2.5, m:"570S:exotic,GT:exotic,720S:exotic:1.3,750S:exotic:1.5,Artura:exotic:1.2"},
+    "Mercedes-Benz": {f:0.85, m:"A-Class:lcar,CLA:lcar,C-Class:lcar,E-Class:lmid,CLS:lmid:1.1,S-Class:lmid:1.5,SL:perf,AMG GT:perf:1.4,GLA:lsuv:0.9,GLB:lsuv,GLK:lsuv,GLC:lsuv,M-Class / ML:lmsuv,GLE:lmsuv,GL:lmsuv,GLS:lfsuv,G-Class:lfsuv:2.5,EQB:evsuv,EQE:ev:2,EQS:ev:2.5,Metris:cvan,Sprinter:cvan:1.3"},
+    "Mini": {f:0.8, m:"Cooper (Hardtop):sub:1.2,Clubman:car,Countryman:xsuv"},
+    "Mitsubishi": {f:0.7, m:"Mirage:sub,Lancer:car,Galant:mid,Eclipse:sport:0.6,Eclipse Cross:xsuv,Outlander Sport:xsuv,Outlander:csuv,Outlander PHEV:csuv"},
+    "Nissan": {f:0.78, m:"Versa:sub,Sentra:car,Altima:mid,Maxima:full,Leaf:ev:0.6,Ariya:evsuv,350Z / 370Z:sport,Z:sport:1.6,GT-R:perf:1.8,Kicks:xsuv,Juke:xsuv,Rogue Sport:xsuv,Rogue:csuv,Murano:msuv,Pathfinder:msuv,Xterra:msuv,Armada:fsuv,Quest:van,Frontier:mtruck,Titan:ftruck,NV / NV200:cvan"},
+    "Polestar": {f:0.6, m:"Polestar 2:ev:2,Polestar 3:evsuv:2.2,Polestar 4:evsuv:2"},
+    "Porsche": {f:1.2, m:"911:exotic,718 Boxster / Cayman:perf,Panamera:perf:1.2,Taycan:ev:3,Macan:lsuv:1.4,Cayenne:lmsuv:1.3"},
+    "Ram": {f:0.95, m:"1500:ftruck,1500 Classic:ftruck,2500 / 3500:hd,ProMaster:cvan,ProMaster City:cvan:0.7"},
+    "Rivian": {f:0.9, m:"R1T:evsuv:2.2,R1S:evsuv:2.2,R2:evsuv:1.5"},
+    "Rolls-Royce": {f:3.5, m:"Ghost:exotic,Wraith:exotic,Phantom:exotic:1.5,Cullinan:exotic:1.3,Spectre:exotic:1.3"},
+    "Subaru": {f:1.05, m:"Impreza:car,Legacy:mid,WRX:sport:1.1,BRZ:sport,Crosstrek:xsuv,Forester:csuv,Outback:csuv,Tribeca:msuv,Ascent:msuv,Solterra:evsuv"},
+    "Tesla": {f:0.85, m:"Model 3:ev:1.6,Model S:ev:2.2,Model X:evsuv:2,Model Y:evsuv:1.3,Cybertruck:evsuv:2.5"},
+    "Toyota": {f:1.2, m:"Yaris:sub,Corolla:car,Matrix:car,Prius:car,Camry:mid,Avalon:full,Crown:full,Mirai:ev:0.4,86 / GR86:sport,Supra:perf,C-HR:xsuv,Corolla Cross:xsuv,RAV4:csuv,Venza:csuv,bZ4X:evsuv,Highlander:msuv,Grand Highlander:msuv,4Runner:msuv:1.3,FJ Cruiser:msuv:1.2,Sequoia:fsuv,Land Cruiser:lfsuv,Sienna:van,Tacoma:mtruck:1.1,Tundra:ftruck"},
+    "VinFast": {f:0.4, m:"VF 8:evsuv:1.3,VF 9:evsuv:1.6"},
+    "Volkswagen": {f:0.8, m:"Golf:car,GTI:sport,Golf R:sport:1.3,Jetta:car,Beetle:car,Passat:mid,CC:mid,Arteon:mid,Taos:xsuv,Tiguan:csuv,Atlas:msuv,Atlas Cross Sport:msuv,Touareg:msuv:1.2,ID.4:evsuv,ID. Buzz:evsuv:1.8"},
+    "Volvo": {f:0.85, m:"S60:lcar,V60:lcar,S90:lmid,V90:lmid,XC40:lsuv:0.9,XC60:lsuv,XC90:lmsuv,C40 / EC40:evsuv,XC40 Recharge / EX40:evsuv,EX30:evsuv,EX90:evsuv:1.8"},
+    "Hummer": {f:0.7, old:true, m:"H2:fsuv,H3:msuv"},
+    "Mercury": {f:0.6, old:true, m:"Milan:mid,Sable:full,Grand Marquis:full,Mariner:csuv,Mountaineer:msuv"},
+    "Pontiac": {f:0.6, old:true, m:"Vibe:car,G6:mid,Grand Prix:mid,G8:full,Solstice:sport,Torrent:csuv"},
+    "Saab": {f:0.5, old:true, m:"9-3:lcar,9-5:lmid"},
+    "Saturn": {f:0.55, old:true, m:"Ion:car,Aura:mid,Sky:sport,Vue:csuv,Outlook:msuv"},
+    "Scion": {f:0.85, old:true, m:"xD:sub,iA:sub,tC:car,xB:car,iM:car,FR-S:sport"},
+    "smart": {f:0.5, old:true, m:"fortwo:sub"},
+    "Suzuki": {f:0.55, old:true, m:"SX4:car,Kizashi:mid,Grand Vitara:csuv"}
+  };
+
+  // Hand-researched ranges that take priority over the segment model.
+  var OVERRIDES = [
+    {make:"Toyota", model:"Camry", low:10500, high:13500, conf:"High"},
+    {make:"Toyota", model:"Corolla", low:8200, high:11200, conf:"High"},
+    {make:"Honda", model:"Civic", low:9300, high:13000, conf:"High"},
+    {make:"Honda", model:"Accord", low:10500, high:13800, conf:"High"},
+    {make:"Hyundai", model:"Elantra", low:3900, high:7300, conf:"Medium"},
+    {make:"Nissan", model:"Sentra", low:2700, high:5300, conf:"Medium"},
+    {make:"BMW", model:"3 Series", low:6600, high:10800, conf:"Medium"},
+    {make:"BMW", model:"X3", low:10900, high:12900, conf:"Medium"},
+    {make:"BMW", model:"X5", low:9400, high:14900, conf:"Low"},
+    {make:"Mercedes-Benz", model:"C-Class", low:9800, high:11700, conf:"Medium"},
+    {make:"Mercedes-Benz", model:"E-Class", low:13000, high:18300, conf:"Low"},
+    {make:"Audi", model:"A4", low:6900, high:10500, conf:"Medium"},
+    {make:"Audi", model:"Q5", low:8700, high:12000, conf:"Medium"},
+    {make:"Volkswagen", model:"Jetta", low:5900, high:7900, conf:"Medium"},
+    {make:"Volkswagen", model:"Tiguan", low:4400, high:7400, conf:"Medium"},
+    {make:"Volvo", model:"XC60", low:9600, high:14000, conf:"Medium"},
+    {make:"Volvo", model:"S60", low:6000, high:17900, conf:"Low"}
+  ];
+
+  function lookup(make, model){
+    var o = OVERRIDES.filter(function(r){ return r.make===make && r.model===model; })[0];
+    var brand = BRANDS[make];
+    var entry = brand.m.split(',').map(function(s){ return s.split(':'); }).filter(function(p){ return p[0]===model; })[0];
+    var seg = entry[1];
+    if(o) return {low:o.low, high:o.high, conf:o.conf, seg:seg};
+    var mid = SEGMENTS[seg].base * brand.f * (entry[2] ? parseFloat(entry[2]) : 1);
+    var conf = (brand.old || seg==='exotic' || seg==='ev' || seg==='evsuv') ? 'Low' : 'Medium';
+    return {low:mid*0.85, high:mid*1.15, conf:conf, seg:seg};
+  }
+
+  var CONDITION = {
+    excellent: {label:"Excellent", value:1.05, upkeep:0.9,  pts:-1},
+    good:      {label:"Good",      value:1.0,  upkeep:1.0,  pts:0},
+    fair:      {label:"Fair",      value:0.87, upkeep:1.15, pts:0},
+    poor:      {label:"Poor",      value:0.7,  upkeep:1.35, pts:1}
+  };
+  var RUST = {
+    none:       {label:"None visible",                  value:1.0,  upkeep:0,  pts:0},
+    surface:    {label:"Surface spots",                 value:0.97, upkeep:10, pts:0},
+    body:       {label:"Bubbling or holes in the body", value:0.85, upkeep:35, pts:1},
+    structural: {label:"Frame, subframe, or brake-line rust", value:0.6, upkeep:80, pts:2}
+  };
+
+  var retention = [100,82,72.5,64.5,58,52.5,47.5,43,39,35.5,32.5,30,27.5,25.5,23.5,22,20.5,19,17.5,16,15];
+  function retentionAt(age){
+    if(age<0) age=0;
+    if(age < retention.length) return retention[age];
+    var extra = age - (retention.length-1);
+    return Math.max(8, retention[retention.length-1] - extra*0.3);
+  }
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function $(id){ return document.getElementById(id); }
+
+  // ---- populate make/model/category selects ----
+  var makeSel = $('make');
+  var modelSel = $('model');
+  var modelField = $('modelField');
+  var categoryField = $('categoryField');
+  var categorySel = $('category');
+
+  function addOpt(sel, value, text){
+    var o = document.createElement('option'); o.value=value; o.textContent=text; sel.appendChild(o);
+  }
+  var makes = Object.keys(BRANDS).sort(function(a,b){ return a.localeCompare(b); });
+  makes.forEach(function(m){ addOpt(makeSel, m, m); });
+  addOpt(makeSel, '__other__', 'Other / not listed');
+  Object.keys(SEGMENTS).forEach(function(k){ addOpt(categorySel, k, SEGMENTS[k].label); });
+
+  function refreshModels(){
+    modelSel.innerHTML='';
+    if(makeSel.value === '__other__'){
+      modelField.style.display='none';
+      categoryField.style.display='block';
+      return;
+    }
+    modelField.style.display='block';
+    categoryField.style.display='none';
+    BRANDS[makeSel.value].m.split(',').map(function(s){ return s.split(':')[0]; })
+      .sort(function(a,b){ return a.localeCompare(b, undefined, {numeric:true}); })
+      .forEach(function(name){ addOpt(modelSel, name, name); });
+  }
+  makeSel.addEventListener('change', refreshModels);
+  makeSel.value = makes[0];
+  refreshModels();
+
+  // ---- step navigation ----
+  var STEP_COUNT = 5;
+  function showStep(i){
+    for(var s=0; s<STEP_COUNT; s++) $('step'+s).classList.toggle('active', s===i);
+    document.querySelectorAll('#progress .seg').forEach(function(seg){
+      var si = parseInt(seg.getAttribute('data-i'),10);
+      seg.classList.toggle('done', si<i);
+      seg.classList.toggle('active', si===i);
+    });
+    if(EMBEDDED) window.parent.postMessage({type:'st-fix-or-trade-scroll'}, '*');
+    else window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  $('next0').addEventListener('click', function(){
+    var year = parseInt($('year').value,10);
+    var mileage = parseInt($('mileage').value,10);
+    var err = $('err0');
+    if(!year || year<1990 || year>2027 || isNaN(mileage) || mileage<0){
+      err.style.display='block';
+      return;
+    }
+    err.style.display='none';
+    showStep(1);
+  });
+  $('back1').addEventListener('click', function(){ showStep(0); });
+  $('next1').addEventListener('click', function(){ showStep(2); });
+  $('back2').addEventListener('click', function(){ showStep(1); });
+  $('next2').addEventListener('click', function(){ showStep(3); });
+  $('back3').addEventListener('click', function(){ showStep(2); });
+
+  var swBoxes = document.querySelectorAll('input.sw');
+  function refreshWarranty(){
+    var any = Array.prototype.some.call(swBoxes, function(b){ return b.checked; });
+    $('warrantyField').style.display = any ? 'block' : 'none';
+  }
+  swBoxes.forEach(function(b){ b.addEventListener('change', refreshWarranty); });
+
+  var noRepair = $('noRepair');
+  var repairField = $('repairField');
+  noRepair.addEventListener('change', function(){
+    repairField.style.display = noRepair.checked ? 'none' : 'block';
+    if(noRepair.checked) $('repairCost').value = 0;
+  });
+
+  // payment/price toggle
+  var tabPayment = $('tabPayment');
+  var tabPrice = $('tabPrice');
+  var paymentMode = $('paymentMode');
+  var priceMode = $('priceMode');
+  var mode = 'payment';
+  tabPayment.addEventListener('click', function(){
+    mode='payment'; tabPayment.classList.add('active'); tabPrice.classList.remove('active');
+    paymentMode.style.display='block'; priceMode.style.display='none';
+  });
+  tabPrice.addEventListener('click', function(){
+    mode='price'; tabPrice.classList.add('active'); tabPayment.classList.remove('active');
+    priceMode.style.display='block'; paymentMode.style.display='none';
+  });
+
+  var horizonInput = $('horizon');
+  var horizonOut = $('horizonOut');
+  function yearsText(months){
+    var yrs = months/12;
+    return (yrs % 1 === 0 ? yrs : yrs.toFixed(1)) + (yrs===1 ? ' year' : ' years');
+  }
+  function renderHorizon(){ horizonOut.textContent = yearsText(parseInt(horizonInput.value,10)); }
+  horizonInput.addEventListener('input', renderHorizon);
+  renderHorizon();
+
+  // sync horizon default to term entered
+  $('knownTerm').addEventListener('change', function(){
+    if(mode==='payment'){ horizonInput.value = clamp(parseInt(this.value,10)||36,12,84); renderHorizon(); }
+  });
+  $('term').addEventListener('change', function(){
+    if(mode==='price'){ horizonInput.value = clamp(parseInt(this.value,10)||60,12,84); renderHorizon(); }
+  });
+
+  $('next3').addEventListener('click', function(){
+    var err = $('err3');
+    if(mode==='payment'){
+      var p = parseFloat($('knownPayment').value);
+      if(!p || p<=0){ err.style.display='block'; return; }
+    } else {
+      var price = parseFloat($('price').value);
+      if(!price || price<=0){ err.style.display='block'; return; }
+    }
+    err.style.display='none';
+    computeAndShow();
+    showStep(4);
+  });
+
+  $('restart').addEventListener('click', function(){
+    var keep = {knownTerm:1, term:1, apr:1, knownDown:1, down:1};
+    document.querySelectorAll('input[type=text], input[type=number], input[type=email], input[type=tel], textarea').forEach(function(i){
+      if(!keep[i.id]) i.value='';
+    });
+    $('knownDown').value = 0; $('down').value = 0;
+    document.querySelector('input[name=cond][value=good]').checked = true;
+    document.querySelector('input[name=rust][value=none]').checked = true;
+    swBoxes.forEach(function(b){ b.checked=false; });
+    $('warranty').value = 'unsure';
+    refreshWarranty();
+    noRepair.checked=false;
+    repairField.style.display='block';
+    $('paymentHasTrade').checked=false;
+    $('applyTrade').checked=true;
+    $('sendConsent').checked=false;
+    $('sendStatus').className='send-status';
+    showStep(0);
+  });
+
+  function money(n){
+    return (n<0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
+  }
+
+  var lastResult = null;
+
+  function computeAndShow(){
+    var year = parseInt($('year').value,10);
+    var mileage = parseInt($('mileage').value,10);
+    var currentYear = new Date().getFullYear();
+    var age = Math.max(0, currentYear - year);
+
+    // ---- base value ----
+    var low, high, conf, seg, isOther=false, carName;
+    if(makeSel.value === '__other__'){
+      isOther = true;
+      seg = categorySel.value;
+      low = SEGMENTS[seg].base*0.8; high = SEGMENTS[seg].base*1.2; conf = 'Low';
+      carName = year + ' ' + SEGMENTS[seg].label.toLowerCase();
+    } else {
+      var ref = lookup(makeSel.value, modelSel.value);
+      low = ref.low; high = ref.high; conf = ref.conf; seg = ref.seg;
+      carName = year + ' ' + makeSel.value + ' ' + modelSel.value;
+    }
+
+    var scale = retentionAt(age) / retentionAt(ANCHOR_AGE);
+    var expectedMileage = Math.max(1000, age*12000);
+    var mileageDiff = (mileage - expectedMileage) / expectedMileage;
+    var mileageFactor = 1 - clamp(mileageDiff*0.25, -0.35, 0.35);
+
+    // ---- condition ----
+    var cond = CONDITION[document.querySelector('input[name=cond]:checked').value];
+    var rust = RUST[document.querySelector('input[name=rust]:checked').value];
+    var swIssues = Array.prototype.filter.call(swBoxes, function(b){ return b.checked; }).map(function(b){ return b.value; });
+    var warranty = $('warranty').value;
+    var swCounts = swIssues.length>0 && warranty!=='yes';
+    var swValue = swCounts ? 1 - 0.03*swIssues.length : 1;
+    var conditionFactor = cond.value * rust.value * swValue;
+
+    var finalLow = Math.max(300, low*scale*mileageFactor*conditionFactor);
+    var finalHigh = Math.max(finalLow+200, high*scale*mileageFactor*conditionFactor);
+    var tradeMid = (finalLow+finalHigh)/2;
+
+    var confOrder = ["High","Medium","Low"];
+    var confIdx = confOrder.indexOf(conf);
+    if(isOther || Math.abs(age-ANCHOR_AGE)>4 || Math.abs(mileageDiff)>0.5 || rust.pts>0) confIdx = Math.min(2, confIdx+1);
+    var finalConf = confOrder[confIdx];
+
+    // ---- repair ----
+    var repairCost = noRepair.checked ? 0 : (parseFloat($('repairCost').value) || 0);
+    var ratio = tradeMid>0 ? (repairCost/tradeMid) : 0;
+
+    // ---- keeping the current car ----
+    var horizonMonths = parseInt(horizonInput.value,10);
+    var maintBase = clamp(70 + 9*Math.max(0, age-2), 70, 230);
+    var swUpkeep = swCounts ? 20*swIssues.length : 0;
+    var maintMonthly = maintBase*cond.upkeep + rust.upkeep + swUpkeep;
+    var fixTotal = repairCost + maintMonthly*horizonMonths;
+
+    // ---- trading in & replacing ----
+    var monthlyPay, termMonths, cashDown, tradeCredit, tradeNote;
+    if(mode==='payment'){
+      monthlyPay = parseFloat($('knownPayment').value)||0;
+      termMonths = parseInt($('knownTerm').value,10) || horizonMonths;
+      cashDown = parseFloat($('knownDown').value)||0;
+      // If the payment doesn't already reflect the trade-in, the dealer's credit comes back to you.
+      tradeCredit = $('paymentHasTrade').checked ? 0 : tradeMid;
+      tradeNote = tradeCredit>0 ? 'minus ' + money(tradeCredit) + ' trade-in' : 'trade-in already in your payment';
+    } else {
+      var price = parseFloat($('price').value)||0;
+      cashDown = parseFloat($('down').value)||0;
+      var apr = parseFloat($('apr').value)||0;
+      termMonths = parseInt($('term').value,10) || horizonMonths;
+      tradeCredit = $('applyTrade').checked ? tradeMid : 0;
+      var principal = Math.max(0, price - cashDown - tradeCredit);
+      var r = apr/100/12;
+      monthlyPay = principal===0 ? 0 : (r===0 ? principal/termMonths : principal*r*Math.pow(1+r,termMonths)/(Math.pow(1+r,termMonths)-1));
+      tradeNote = tradeCredit>0 ? money(tradeCredit) + ' trade-in lowers the loan' : 'trade-in not applied';
+    }
+    var coveredMonths = Math.min(horizonMonths, termMonths);
+    var paymentsTotal = monthlyPay*coveredMonths;
+    var afterTermUpkeep = horizonMonths>termMonths ? 40*(horizonMonths-termMonths) : 0; // light upkeep once paid off / lease ended
+    var tradeGross = cashDown + paymentsTotal + afterTermUpkeep;
+    // In price mode the credit is already inside the loan; in payment mode subtract it here.
+    var tradeTotal = mode==='payment' ? tradeGross - tradeCredit : tradeGross;
+    if(mode==='price' && tradeCredit > price - cashDown) tradeTotal -= (tradeCredit - Math.max(0, price - cashDown));
+
+    var diff = tradeTotal - fixTotal;
+
+    // ---- scoring ----
+    var points = 0;
+    if(ratio>0.6) points+=2; else if(ratio>0.35) points+=1; else if(ratio<0.15) points-=1;
+    if(diff<0) points+=2; else if(diff < fixTotal*0.25) points+=1; else if(diff > fixTotal*1.5) points-=1;
+    if(age>=12 && mileage > age*12000*1.3) points+=1;
+    if(repairCost===0) points-=1;
+    points += cond.pts + rust.pts;
+    if(swCounts && swIssues.length>=2) points+=1;
+
+    var isTrade = points>0;
+
+    // ---- render ----
+    var period = yearsText(horizonMonths);
+    $('statTradeIn').textContent = money(finalLow)+' – '+money(finalHigh);
+    $('statTradeInConf').textContent = finalConf+' confidence' + (isOther ? ' · category estimate' : '');
+    $('statRatio').textContent = tradeMid>0 ? Math.round(ratio*100)+'%' : '—';
+    $('statFixTotal').textContent = money(fixTotal);
+    $('statFixSub').textContent = 'repair + upkeep over ' + period;
+    $('statTradeTotal').textContent = money(tradeTotal);
+    $('statTradeSub').textContent = 'over ' + period + ', ' + tradeNote;
+
+    var verdictCard = $('verdictCard');
+    var headline = $('verdictHeadline');
+    var sub = $('verdictSub');
+    var resultCta = $('resultCta');
+    var resultCtaText = $('resultCtaText');
+
+    if(isTrade){
+      verdictCard.className = 'verdict-card trade';
+      headline.textContent = 'Trade it in';
+      sub.textContent = rust.pts===2
+        ? 'Structural rust changes the picture. It\'s a safety issue, and it\'s rarely worth putting big money into.'
+        : 'The math leans toward moving on. Repairs and upkeep are eating into what this car is still worth.';
+      resultCta.href = 'https://www.besafetravels.com/calculator';
+      resultCtaText.textContent = 'Get a pre-trade inspection first';
+    } else {
+      verdictCard.className = 'verdict-card fix';
+      headline.textContent = 'Fix it';
+      sub.textContent = 'Keeping and repairing your current car looks like the stronger financial move right now.';
+      resultCta.href = 'https://www.besafetravels.com';
+      resultCtaText.textContent = 'Book your repair with Safe Travels';
+    }
+
+    // reasoning bullets
+    var reasons = [];
+    reasons.push('Your ' + carName + ' in ' + cond.label.toLowerCase() + ' condition is estimated to be worth ' + money(finalLow) + '–' + money(finalHigh) + ' at trade-in.');
+    if(rust.pts===2){
+      reasons.push('Frame or brake-line rust lowers the value a lot, and it can make the car unsafe. Have it inspected before you pay for other repairs.');
+    } else if(rust.pts===1){
+      reasons.push('Body rust lowers the trade-in value and tends to spread, especially with NJ road salt. We\'ve added extra upkeep for it.');
+    }
+    if(swIssues.length>0){
+      reasons.push(warranty==='yes'
+        ? 'Your electronics or software problems may be fixed free under warranty or a recall. Ask the dealer before paying for them.'
+        : 'Ongoing electronics or software problems can be costly to chase down out of warranty. We\'ve lowered the value and raised upkeep to reflect that. Check nhtsa.gov/recalls for free fixes.');
+    }
+    if(repairCost>0){
+      reasons.push('The ' + money(repairCost) + ' repair is about ' + Math.round(ratio*100) + '% of that estimated value.');
+    } else {
+      reasons.push('You don\'t have a specific repair on the table right now, so this compares typical upkeep against replacing the car.');
+    }
+    reasons.push('Keeping the car (repair + about ' + money(maintMonthly) + '/month upkeep) runs about ' + money(fixTotal) + ' over ' + period + '.');
+    if(mode==='payment'){
+      reasons.push('Replacing it runs about ' + money(tradeGross) + ' in cash down and payments' + (tradeCredit>0 ? ', minus the ' + money(tradeCredit) + ' you\'d get for your trade-in, for a net ' + money(tradeTotal) : '') + ' over the same period.');
+    } else {
+      reasons.push('Replacing it runs about ' + money(tradeTotal) + ' over the same period (' + money(cashDown) + ' down + ' + money(monthlyPay) + '/month' + (tradeCredit>0 ? ', after your ' + money(tradeCredit) + ' trade-in lowers the loan' : '') + ').');
+    }
+    if(age>=12 && mileage > age*12000*1.3){
+      reasons.push('Higher-than-typical mileage for its age adds some reliability risk to factor in.');
+    }
+    if(seg==='exotic'){
+      reasons.push('Exotic and collectible cars vary widely. Get a specialist appraisal before you rely on this estimate.');
+    }
+    var list = $('reasoningList');
+    list.innerHTML='';
+    reasons.forEach(function(r){
+      var li = document.createElement('li');
+      var dot = document.createElement('span'); dot.className='dot';
+      var txt = document.createElement('span'); txt.textContent = r;
+      li.appendChild(dot); li.appendChild(txt);
+      list.appendChild(li);
+    });
+
+    // answers summary (screen, print and email)
+    var answers = [
+      ['Car', carName],
+      ['Mileage', mileage.toLocaleString('en-US')],
+      ['VIN / plate', $('platevin').value.trim() || '—'],
+      ['Condition', cond.label],
+      ['Rust', rust.label],
+      ['Electronics / software', swIssues.length ? swIssues.join('; ') : 'No problems reported'],
+      ['Repair quote', repairCost>0 ? money(repairCost) : 'None'],
+      mode==='payment'
+        ? ['New car', money(monthlyPay) + '/mo for ' + termMonths + ' mo, ' + money(cashDown) + ' down' + ($('paymentHasTrade').checked ? ', trade-in included' : '')]
+        : ['New car', money(parseFloat($('price').value)||0) + ' at ' + (parseFloat($('apr').value)||0) + '% for ' + termMonths + ' mo, ' + money(cashDown) + ' down' + (tradeCredit>0 ? ', trade-in applied' : '')],
+      ['Comparing over', period]
+    ];
+    if(swIssues.length) answers.splice(6, 0, ['Under warranty', {yes:'Yes', no:'No', unsure:'Not sure'}[warranty]]);
+    var al = $('answersList');
+    al.innerHTML = '';
+    answers.forEach(function(a){
+      var li = document.createElement('li');
+      var k = document.createElement('span'); k.textContent = a[0];
+      var v = document.createElement('span'); v.textContent = a[1];
+      li.appendChild(k); li.appendChild(v); al.appendChild(li);
+    });
+
+    $('mathBody').innerHTML =
+      '<p><strong>Trade-in estimate:</strong> starts from a reference value for that model (or its vehicle category) as an 8-year-old car, adjusted for age with a typical depreciation curve, for mileage compared with what\'s expected at that age, and for the condition, rust and electronics problems you reported.</p>' +
+      '<p><strong>Cost to keep &amp; fix:</strong> your repair quote, plus an estimated ' + money(maintMonthly) + '/month in upkeep for a car this age and condition, over the comparison period.</p>' +
+      '<p><strong>Net cost to trade in &amp; replace:</strong> cash down plus monthly payments over the comparison period (payments are entered directly, or calculated from price, APR and term), minus the estimated value of your trade-in. It does not include sales tax, MVC fees or insurance.</p>' +
+      '<p>Every real car differs by condition, region, and trim. Treat this as a starting point for the conversation, not a final number.</p>';
+
+    $('printDate').textContent = 'Prepared ' + new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}) + ' at besafetravels.com';
+
+    lastResult = {
+      verdict: isTrade ? 'Trade it in' : 'Fix it',
+      answers: answers,
+      tradeInRange: money(finalLow) + ' – ' + money(finalHigh) + ' (' + finalConf + ' confidence)',
+      repairRatio: tradeMid>0 ? Math.round(ratio*100)+'%' : '—',
+      keepCost: money(fixTotal),
+      tradeCost: money(tradeTotal),
+      reasons: reasons
+    };
+  }
+
+  // ---- print / save as PDF ----
+  var detailsEls = document.querySelectorAll('#step4 details');
+  var openBeforePrint = [];
+  window.addEventListener('beforeprint', function(){
+    openBeforePrint = Array.prototype.map.call(detailsEls, function(d){ return d.open; });
+    detailsEls.forEach(function(d){ d.open = true; });
+  });
+  window.addEventListener('afterprint', function(){
+    detailsEls.forEach(function(d, i){ d.open = openBeforePrint[i]; });
+  });
+  $('printBtn').addEventListener('click', function(){ window.print(); });
+
+  // ---- send results to Safe Travels ----
+  function resultText(contact){
+    var r = lastResult;
+    var lines = [];
+    lines.push('Name: ' + contact.name);
+    lines.push('Email: ' + (contact.email || '—'));
+    lines.push('Phone: ' + (contact.phone || '—'));
+    if(contact.note) lines.push('Note: ' + contact.note);
+    lines.push('');
+    lines.push('RESULT: ' + r.verdict);
+    lines.push('Trade-in estimate: ' + r.tradeInRange);
+    lines.push('Repair as % of value: ' + r.repairRatio);
+    lines.push('Cost to keep & fix: ' + r.keepCost);
+    lines.push('Net cost to trade in & replace: ' + r.tradeCost);
+    lines.push('');
+    r.answers.forEach(function(a){ lines.push(a[0] + ': ' + a[1]); });
+    lines.push('');
+    r.reasons.forEach(function(x){ lines.push('- ' + x); });
+    return lines.join('\n');
+  }
+
+  function mailtoFallback(contact){
+    var subject = 'Fix or trade-in results: ' + contact.name;
+    return 'mailto:' + CONFIG.leadEmail + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(resultText(contact));
+  }
+
+  function setStatus(cls, text, href){
+    var s = $('sendStatus');
+    s.className = 'send-status ' + cls;
+    s.textContent = text;
+    if(href){
+      var a = document.createElement('a');
+      a.href = href; a.textContent = 'Email it to us instead';
+      s.appendChild(document.createTextNode(' '));
+      s.appendChild(a);
+    }
+  }
+
+  $('sendForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!lastResult) return;
+    var contact = {
+      name: $('sendName').value.trim(),
+      email: $('sendEmail').value.trim(),
+      phone: $('sendPhone').value.trim(),
+      note: $('sendNote').value.trim()
+    };
+    if(!contact.name || (!contact.email && !contact.phone)){
+      setStatus('bad', 'Please add your name and an email or phone number.');
+      return;
+    }
+    if(contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)){
+      setStatus('bad', 'That email address doesn\'t look right.');
+      return;
+    }
+    if(!$('sendConsent').checked){
+      setStatus('bad', 'Please check the box so we can reply to you.');
+      return;
+    }
+    if(!CONFIG.submitEndpoint){
+      window.location.href = mailtoFallback(contact);
+      return;
+    }
+
+    var payload = {
+      _subject: 'Fix or trade-in results: ' + contact.name + ' (' + lastResult.verdict + ')',
+      _template: 'box',
+      _captcha: 'false',
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone,
+      message: resultText(contact)
+    };
+    if(contact.email) payload._replyto = contact.email;
+
+    var btn = $('sendBtn');
+    btn.disabled = true;
+    setStatus('ok', 'Sending…');
+    fetch(CONFIG.submitEndpoint, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Accept':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      return res.json().catch(function(){ return {}; }).then(function(body){
+        if(!res.ok || body.success === false || body.success === 'false') throw new Error(body.message || 'Send failed');
+      });
+    }).then(function(){
+      setStatus('ok', 'Sent! We\'ll be in touch soon.');
+    }).catch(function(){
+      setStatus('bad', 'We couldn\'t send that automatically.', mailtoFallback(contact));
+      btn.disabled = false;
+    });
+  });
+
+})();
+</script>
+</body>
+</html>

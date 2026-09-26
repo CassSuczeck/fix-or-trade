@@ -1,0 +1,175 @@
+# Fix it, or trade it in? — Safe Travels Mobile Repair
+
+A free, 5-step web tool that helps a car owner decide whether to repair their current car or trade it in. It's built as one self-contained web page for Safe Travels Mobile Repair (Middletown / Port Monmouth, NJ).
+
+**Status:** built and tested, not live yet. See [Launch checklist](#launch-checklist).
+
+| File | What it is |
+|---|---|
+| `index.html` | The whole tool: page, styles, reference data and logic. No build step. |
+| `squarespace-snippet.html` | The whole tool as one paste-in Squarespace Embed Block. Generated; don't edit by hand. |
+| `build-squarespace-snippet.py` | Rebuilds `squarespace-snippet.html` from `index.html`. |
+| `embed.html` | Short embed for when the tool is hosted on GitHub Pages. |
+| `README.md` | This document. |
+
+---
+
+## 1. What the customer sees
+
+1. **Current car:** model year, mileage, make and model (54 makes, about 500 models), plus an optional VIN or plate. "Other / not listed" lets them pick a vehicle category instead.
+2. **Condition:** overall condition (Excellent / Good / Fair / Poor), rust (none / surface / body / frame or brake-line), and electronics or software problems. If they report any electronics problems, the tool asks about factory warranty and links to the free NHTSA recall lookup.
+3. **Repair needed:** the repair quote amount, with a link to the Safe Travels quote calculator. They can also say there's no repair and they're just weighing options.
+4. **Replacement car:** either a known monthly payment (term, cash down, and whether the payment already includes the trade-in) or price, cash down, APR and term. The customer also picks a comparison period of 1–7 years.
+5. **Result:** "Fix it" or "Trade it in". It shows:
+   - the trade-in value range with a confidence level
+   - the repair as a % of that value
+   - the cost to keep and fix
+   - the net cost to trade in and replace
+   - a list of reasons, the customer's answers, and how the numbers were worked out
+   - a **Print or save as PDF** button
+   - a **Send my results to Safe Travels** form
+   - the disclaimer
+
+## 2. How the numbers work
+
+All of the logic is in the `<script>` at the bottom of `index.html`.
+
+### Trade-in value
+1. **Reference value.** Each model's base value is what a 2018 car (8 years old) trades in for in 2026.
+   - 17 models have hand-researched ranges (`OVERRIDES`).
+   - Every other model's value is `category base value × brand resale factor × optional model factor` (`SEGMENTS` and `BRANDS`), with a range of ±15%.
+2. **Age:** scaled with a typical depreciation curve (`retention`).
+3. **Mileage:** compared with 12,000 miles/year. The value moves up or down by at most 35%.
+4. **Condition:**
+
+   | Factor | Options and value effect |
+   |---|---|
+   | Overall condition | Excellent ×1.05, Good ×1.0, Fair ×0.87, Poor ×0.70 |
+   | Rust | None ×1.0, Surface ×0.97, Body ×0.85, Frame/brake-line ×0.60 |
+   | Electronics problems (only when not under warranty) | −3% each |
+
+5. **Confidence** starts at High, Medium or Low, depending on the data source. It drops a level for a category estimate, a car more than 4 years from the 2018 reference, mileage far from normal, or any body or frame rust. EVs, exotics and discontinued brands are always Low.
+
+### Cost to keep & fix
+`repair quote + monthly upkeep × months`
+
+Monthly upkeep is:
+- a base of $70, rising $9 per year of age after year 2, capped at $230
+- × a condition multiplier (0.9 to 1.35)
+- \+ rust upkeep ($0 / $10 / $35 / $80)
+- \+ $20 per electronics problem when not under warranty
+
+### Net cost to trade in & replace
+- **"I know my payment":** `cash down + payments during the period − trade-in value`. The trade-in isn't subtracted if the customer says the payment already includes it.
+- **"Price & terms":** the trade-in and cash down reduce the loan amount, and the monthly payment comes from the standard loan formula. The total is `cash down + payments during the period`. If the trade-in is worth more than the car, the extra comes back as cash.
+- After the loan or lease ends, it adds $40/month in light upkeep for the rest of the period.
+- Sales tax, MVC fees and insurance are **not** included (see the disclaimer).
+
+### The verdict
+The tool adds up points, and more than 0 points means "Trade it in".
+
+| Signal | Points |
+|---|---|
+| Repair is more than 60% of the car's value | +2 |
+| Repair is 35–60% of the car's value | +1 |
+| Repair is less than 15% of the car's value | −1 |
+| Replacing costs less than keeping | +2 |
+| Replacing costs up to 25% more than keeping | +1 |
+| Replacing costs more than 2.5× keeping | −1 |
+| 12+ years old with high mileage | +1 |
+| No repair entered | −1 |
+| Poor condition | +1 |
+| Excellent condition | −1 |
+| Body rust | +1 |
+| Frame or brake-line rust | +2 |
+| 2+ electronics problems, not under warranty | +1 |
+
+### Updating the data
+- **Add a model:** add `Model:segment` to its brand's `m:` list in `BRANDS`. To adjust one model's value, add a factor, e.g. `4Runner:msuv:1.3`.
+- **Use a researched range:** add a row to `OVERRIDES`. It replaces the formula for that model.
+- **Refresh every year:** the reference values are for 2018 cars priced in 2026. Each year, re-check a few `OVERRIDES` against KBB or Edmunds and nudge the `SEGMENTS` base values to match.
+
+## 3. Sending results by email
+
+When the customer presses **Send my results to Safe Travels**, the tool posts their name, email/phone, note, answers and result to a form-to-email service. The service then emails it to **info@besafetravels.com**.
+
+The settings are at the top of the script:
+
+```js
+var CONFIG = {
+  leadEmail: 'info@besafetravels.com',
+  submitEndpoint: 'https://formsubmit.co/ajax/info@besafetravels.com'
+};
+```
+
+- **Why a separate service:** Squarespace forms only accept submissions from Squarespace's own Form Block, so custom code needs a form-to-email service.
+- **FormSubmit (current setting)** is free and needs no account. **The very first submission sends an activation email to info@besafetravels.com.** Click the link in it, and every later submission is delivered.
+- **Switching to Formspree** (free tier, with an account and dashboard): create a form, then set `submitEndpoint` to `https://formspree.io/f/YOUR_ID`.
+- **If sending fails,** or `submitEndpoint` is `''`, the customer gets an "Email it to us instead" link. It opens their own email app with the results already filled in.
+- **Privacy:** customer contact details pass through the form service. Mention the service in your privacy and AI usage policies.
+
+## 4. Hosting (GitHub Pages)
+
+1. This repo must be **public** for free GitHub Pages.
+2. On GitHub, go to **Settings → Pages**. Under *Build and deployment*, choose **Deploy from a branch**, then branch **main**, folder **/ (root)**, and save.
+3. After about a minute, the tool is live at **https://casssuczeck.github.io/fix-or-trade/**.
+4. Every change pushed to `main` goes live automatically.
+
+### Optional: your own address (e.g. `tools.besafetravels.com`)
+1. In Squarespace, go to **Settings → Domains & Email → besafetravels.com → DNS**. Add a **CNAME** record with host `tools`, pointing to `casssuczeck.github.io`.
+2. On GitHub, go to **Settings → Pages → Custom domain**, enter `tools.besafetravels.com`, save, and tick **Enforce HTTPS** once it's available.
+3. In `embed.html`, change the iframe `src` to `https://tools.besafetravels.com/` and `TOOL_ORIGIN` to `https://tools.besafetravels.com`.
+
+## 5. Putting it on the Squarespace site
+
+HTML embeds work on the current website plan, and the live `/calculator` page is already one. There are two ways to add the tool.
+
+### Option 1: paste-in snippet (no hosting needed, recommended for testing)
+`squarespace-snippet.html` is the whole tool packed into one block. Its styles and element IDs can't clash with the Squarespace theme, and it resizes itself at each step.
+
+1. In Squarespace, go to **Pages** and click **+**. Choose a blank page, name it (e.g. *Fix or Trade?*), and set the URL slug (e.g. `/fix-or-trade`).
+2. To test privately first, turn the page off in Page Settings, or leave it in **Not Linked** so it's not in the menu.
+3. Click **Edit**, add a block, and choose **Embed**. Click the pencil, choose **Code Snippet**, and click **Embed data**.
+4. Open `squarespace-snippet.html`, select everything (Ctrl+A), copy it, paste it into the box, and click **Set**.
+5. Save, then open the live page in a private window. The editor often shows "Script disabled" instead of the tool, which is normal.
+6. **Rebuild the snippet after every change to `index.html`:** run `python3 build-squarespace-snippet.py`, then paste the new file over the old one.
+
+If the Embed Block refuses the snippet, for example because it's too long, try a **Code Block** instead. It takes the same paste.
+
+### Option 2: hosted + small embed (once GitHub Pages is on)
+Host the tool (section 4), then paste the much shorter `embed.html` instead. Future changes go live by pushing to GitHub, with no re-pasting in Squarespace. If you set up a custom domain, change the iframe `src` and `TOOL_ORIGIN` in `embed.html` to match it.
+
+### Test checklist on the live page
+- [ ] The tool shows full-width with no scrollbar inside it, on a phone and a desktop.
+- [ ] Moving between steps scrolls you back to the top of the tool.
+- [ ] Print or save as PDF prints only the result, not the Squarespace page.
+- [ ] Sending results works, and the first send triggers the FormSubmit activation email.
+
+## 6. Disclaimer & legal
+
+The result page includes a disclaimer written with New Jersey in mind:
+- the result is not an offer, appraisal, written repair estimate, credit offer, or financial or legal advice
+- excluded costs: NJ sales tax (6.625%), MVC title and registration fees, dealer fees, insurance and any existing loan balance
+- financing figures are for illustration only
+- only a hands-on inspection can confirm rust damage or safety, plus a link to the NHTSA recall lookup
+- Safe Travels is a repair business, not a dealer or lender, and earns money from repairs
+- a privacy note
+
+**It was drafted by an AI, not a lawyer.** Have a NJ attorney (or your SCORE mentor's legal contact) review it before launch. That includes the privacy wording, which commits Safe Travels to using submitted information only to reply.
+
+## 7. Testing checklist
+- [ ] Walk through all 5 steps on a phone and a desktop.
+- [ ] Try "Other / not listed", "No known repairs", both payment modes, and frame rust.
+- [ ] Print or save as PDF (Chrome, Safari, and iPhone share sheet → Print).
+- [ ] Send a test result and confirm the FormSubmit activation, then send another and confirm it arrives.
+- [ ] Turn off the network and press Send to confirm the email fallback link appears.
+- [ ] Check dark mode.
+
+## Launch checklist
+- [ ] Create this public repo and turn on GitHub Pages (section 4)
+- [ ] Optional: set up `tools.besafetravels.com`
+- [ ] Activate FormSubmit, or switch to Formspree (section 3)
+- [ ] Attorney review of the disclaimer and privacy wording (section 6)
+- [ ] Spot-check trade-in values for your most common customer cars
+- [ ] Add it to a Squarespace page and run the live-page tests (section 5)
+- [ ] Add the tool to your privacy and AI usage policies
