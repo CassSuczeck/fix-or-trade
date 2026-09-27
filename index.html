@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  // Inside an iframe (the Squarespace embed): hide our own header, use a transparent
+  // background and the light theme, so the tool blends into the host page. Runs before
+  // first paint so the header never flashes. Standalone visits are unaffected.
+  if (window.self !== window.top) {
+    document.documentElement.classList.add('embedded');
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+</script>
 <title>Fix It or Trade It In? — Safe Travels</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,8 +31,14 @@
     --ink-on-blue: #FFFFFF;
     --text-body: #2A2E5C;
     --text-muted: #5C63A0;
-    --good: #2E9E6B;
+    --good: #1B6B47;
     --focus: #1B1E5C;
+    /* WCAG 2.2 AA: text/buttons >= 4.5:1, control borders >= 3:1 */
+    --btn: #4A5CD0;
+    --btn-hover: #3A4BB8;
+    --error: #B3361F;
+    --field-border: #737DBF;
+    --accent-text: #3A4BB8;
     --shadow: 0 10px 30px rgba(27,30,92,0.12);
   }
   :root:not([data-theme="light"]) {
@@ -43,6 +58,11 @@
       --text-muted: #A7ACDD;
       --good: #6FDBA6;
       --focus: #ECEFFF;
+      --btn: #8C9AF5;
+      --btn-hover: #A5B1F8;
+      --error: #FF7259;
+      --field-border: #8088D0;
+      --accent-text: #8C9AF5;
       --shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
   }
@@ -62,6 +82,11 @@
     --text-muted: #A7ACDD;
     --good: #6FDBA6;
     --focus: #ECEFFF;
+    --btn: #8C9AF5;
+    --btn-hover: #A5B1F8;
+    --error: #FF7259;
+    --field-border: #8088D0;
+    --accent-text: #8C9AF5;
     --shadow: 0 10px 30px rgba(0,0,0,0.4);
   }
 
@@ -74,8 +99,18 @@
     min-height:100vh;
     line-height:1.5;
   }
-  html.embedded body{ min-height:0; }
-  html.embedded .wrap{ padding-top:8px; }
+  /* Embedded: no header, no background of our own. Everything left sits inside the card,
+     so contrast never depends on the host page's colors. */
+  html.embedded{ background:transparent; color-scheme:light; }
+  html.embedded body{ min-height:0; background:transparent; }
+  html.embedded .wrap{ padding:6px 10px 28px; }
+  html.embedded header.top, html.embedded .title-block .sub{ display:none; }
+  html.embedded .title-block{ margin:0; }
+  html.embedded .title-block h1{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  html.embedded .card .progress{ margin:0 0 18px; }
+  .sr-only{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  .step-title:focus{ outline:none; }
+  ::placeholder{ color: var(--text-muted); opacity:1; }
   .wrap{
     max-width: 640px;
     margin: 0 auto;
@@ -103,7 +138,7 @@
     font-weight:600;
     font-size:11px;
     letter-spacing:0.08em;
-    color: var(--blue-deep);
+    color: var(--accent-text);
   }
   .title-block{ margin: 6px 0 26px; }
   h1{
@@ -115,7 +150,7 @@
     line-height:1.15;
   }
   .sub{
-    color: var(--blue-deep);
+    color: var(--accent-text);
     font-weight:600;
     font-size:16px;
     margin:0;
@@ -175,7 +210,7 @@
     width:100%;
     padding: 12px 14px;
     border-radius: 12px;
-    border: 1.5px solid var(--card-border);
+    border: 1.5px solid var(--field-border);
     background: var(--bg-soft);
     color: var(--text-body);
     font-family:'Inter',sans-serif;
@@ -211,7 +246,7 @@
     cursor:pointer;
   }
   .toggle button.active{
-    background: var(--blue);
+    background: var(--btn);
     color: var(--ink-on-blue);
   }
 
@@ -235,7 +270,7 @@
     justify-content:space-between;
     gap:10px;
     text-decoration:none;
-    background: var(--coral);
+    background: #B93D26;
     color: #fff;
     padding: 14px 18px;
     border-radius: 14px;
@@ -243,7 +278,7 @@
     font-size:14.5px;
     margin-bottom:20px;
   }
-  .cta-link:hover{ background: var(--coral-deep); }
+  .cta-link:hover{ background: #A83520; }
   .cta-link .arrow{ font-size:18px; }
 
   .nav-buttons{
@@ -253,7 +288,7 @@
     margin-top: 22px;
   }
   button.primary{
-    background: var(--blue);
+    background: var(--btn);
     color: var(--ink-on-blue);
     border:none;
     padding: 13px 26px;
@@ -263,11 +298,11 @@
     font-size:15px;
     cursor:pointer;
   }
-  button.primary:hover{ background: var(--blue-deep); }
+  button.primary:hover{ background: var(--btn-hover); }
   button.ghost{
     background:transparent;
     color: var(--navy-soft);
-    border: 1.5px solid var(--card-border);
+    border: 1.5px solid var(--field-border);
     padding: 13px 22px;
     border-radius: 14px;
     font-family:'Inter',sans-serif;
@@ -300,12 +335,11 @@
     color: #fff;
     margin-bottom: 20px;
   }
-  .verdict-card.fix{ background: linear-gradient(160deg, var(--navy) 0%, var(--navy-soft) 100%); }
-  .verdict-card.trade{ background: linear-gradient(160deg, var(--coral-deep) 0%, var(--coral) 100%); }
+  .verdict-card.fix{ background: linear-gradient(160deg, #1B1E5C 0%, #3A3F86 100%); }
+  .verdict-card.trade{ background: linear-gradient(160deg, #A83520 0%, #B93D26 100%); }
   .verdict-eyebrow{
     font-size:13px;
     font-weight:700;
-    opacity:0.85;
     margin:0 0 6px;
   }
   .verdict-headline{
@@ -402,7 +436,7 @@
   .step.active{ display:block; }
 
   .error-msg{
-    color: var(--coral-deep);
+    color: var(--error);
     font-size:13px;
     font-weight:600;
     margin: -8px 0 16px;
@@ -452,7 +486,7 @@
     width:100%;
     padding: 11px 13px;
     border-radius: 12px;
-    border: 1.5px solid var(--card-border);
+    border: 1.5px solid var(--field-border);
     background: var(--white);
     color: var(--text-body);
     font-family:'Inter',sans-serif;
@@ -464,15 +498,15 @@
   .send-box .checkrow span{ font-size:12.5px; }
   .send-status{ font-size:13px; font-weight:600; margin: 0 0 14px; display:none; }
   .send-status.ok{ color: var(--good); display:block; }
-  .send-status.bad{ color: var(--coral-deep); display:block; }
+  .send-status.bad{ color: var(--error); display:block; }
   .send-box button.primary{ width:100%; margin-bottom:14px; }
 
   .disclaimer h3{ font-size:12.5px; font-weight:700; color: var(--text-body); margin:14px 0 4px; }
   .disclaimer p{ margin:0 0 8px; }
   .print-only{ display:none; }
   /* A line is always reserved for the message, so showing or clearing it never moves the form. */
-  .field-err{ color: var(--coral-deep); font-size:12.5px; font-weight:600; line-height:1.4; min-height:1.4em; margin:4px 0 -8px; }
-  .send-box input[aria-invalid="true"]{ border-color: var(--coral-deep); }
+  .field-err{ color: var(--error); font-size:12.5px; font-weight:600; line-height:1.4; min-height:1.4em; margin:4px 0 -8px; }
+  .send-box input[aria-invalid="true"], input[aria-invalid="true"]{ border-color: var(--error); }
   .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
   @media print{
@@ -512,7 +546,7 @@
     <p class="sub">A quick, honest look at the numbers before you sign anything.</p>
   </div>
 
-  <div class="progress" id="progress">
+  <div class="progress" id="progress" aria-hidden="true">
     <div class="seg" data-i="0"></div>
     <div class="seg" data-i="1"></div>
     <div class="seg" data-i="2"></div>
@@ -525,16 +559,16 @@
     <!-- STEP 1: current car -->
     <div class="step active" id="step0">
       <p class="step-label">Step 1 of 5</p>
-      <h2 class="step-title">Tell us about your current car</h2>
+      <h2 class="step-title" tabindex="-1">Tell us about your current car</h2>
 
       <div class="row2">
         <div class="field">
           <label for="year">Model year</label>
-          <input type="number" id="year" inputmode="numeric" placeholder="e.g. 2018" min="1990" max="2027">
+          <input type="number" id="year" inputmode="numeric" aria-describedby="err0" placeholder="e.g. 2018" min="1990" max="2027">
         </div>
         <div class="field">
           <label for="mileage">Mileage</label>
-          <input type="number" id="mileage" inputmode="numeric" placeholder="e.g. 82000" min="0">
+          <input type="number" id="mileage" inputmode="numeric" aria-describedby="err0" placeholder="e.g. 82000" min="0">
         </div>
       </div>
 
@@ -559,7 +593,7 @@
         <input type="text" id="platevin" placeholder="Helps us if you send us your results">
       </div>
 
-      <p class="error-msg" id="err0">Enter a model year and mileage to continue.</p>
+      <p class="error-msg" id="err0" role="alert">Enter a model year and mileage to continue.</p>
 
       <div class="nav-buttons">
         <span></span>
@@ -570,7 +604,7 @@
     <!-- STEP 2: condition -->
     <div class="step" id="step1">
       <p class="step-label">Step 2 of 5</p>
-      <h2 class="step-title">What shape is it in?</h2>
+      <h2 class="step-title" tabindex="-1">What shape is it in?</h2>
 
       <fieldset class="opts">
         <legend>Overall condition</legend>
@@ -603,7 +637,7 @@
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
-        <p class="hint">Software problems are often fixed free under a recall or warranty. Check your VIN at <a href="https://www.nhtsa.gov/recalls" target="_blank" rel="noopener">nhtsa.gov/recalls</a>.</p>
+        <p class="hint">Software problems are often fixed free under a recall or warranty. Check your VIN at <a href="https://www.nhtsa.gov/recalls" target="_blank" rel="noopener">nhtsa.gov/recalls<span class="sr-only"> (opens in a new tab)</span></a>.</p>
       </div>
 
       <div class="nav-buttons">
@@ -615,11 +649,11 @@
     <!-- STEP 3: repair situation -->
     <div class="step" id="step2">
       <p class="step-label">Step 3 of 5</p>
-      <h2 class="step-title">What's it need right now?</h2>
+      <h2 class="step-title" tabindex="-1">What's it need right now?</h2>
 
       <a class="cta-link" href="https://www.besafetravels.com/calculator" target="_blank" rel="noopener">
         <span>Get a free repair quote from Safe Travels</span>
-        <span class="arrow">↗</span>
+        <span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span>
       </a>
 
       <label class="checkrow" for="noRepair">
@@ -642,18 +676,18 @@
     <!-- STEP 4: new car -->
     <div class="step" id="step3">
       <p class="step-label">Step 4 of 5</p>
-      <h2 class="step-title">The car you're considering</h2>
+      <h2 class="step-title" tabindex="-1">The car you're considering</h2>
 
-      <div class="toggle" role="tablist">
-        <button type="button" id="tabPayment" class="active">I know my payment</button>
-        <button type="button" id="tabPrice">Enter price &amp; terms</button>
+      <div class="toggle" role="group" aria-label="How do you want to enter the new car's cost?">
+        <button type="button" id="tabPayment" class="active" aria-pressed="true">I know my payment</button>
+        <button type="button" id="tabPrice" aria-pressed="false">Enter price &amp; terms</button>
       </div>
 
       <div id="paymentMode">
         <div class="row2">
           <div class="field">
             <label for="knownPayment">Monthly payment ($)</label>
-            <input type="number" id="knownPayment" inputmode="numeric" placeholder="e.g. 480" min="0">
+            <input type="number" id="knownPayment" inputmode="numeric" aria-describedby="err3" placeholder="e.g. 480" min="0">
           </div>
           <div class="field">
             <label for="knownTerm">Term (months)</label>
@@ -674,7 +708,7 @@
         <div class="row2">
           <div class="field">
             <label for="price">Vehicle price ($)</label>
-            <input type="number" id="price" inputmode="numeric" placeholder="e.g. 32000" min="0">
+            <input type="number" id="price" inputmode="numeric" aria-describedby="err3" placeholder="e.g. 32000" min="0">
           </div>
           <div class="field">
             <label for="down">Cash down ($)</label>
@@ -704,7 +738,7 @@
         <div class="slider-value"><span>1 yr</span><span id="horizonOut">3 years</span><span>7 yrs</span></div>
       </div>
 
-      <p class="error-msg" id="err3">Enter a payment or a price to continue.</p>
+      <p class="error-msg" id="err3" role="alert">Enter a payment or a price to continue.</p>
 
       <div class="nav-buttons">
         <button class="ghost" id="back3">Back</button>
@@ -715,7 +749,7 @@
     <!-- STEP 5: result -->
     <div class="step" id="step4">
       <p class="step-label">Step 5 of 5</p>
-      <h2 class="step-title">Here's what the numbers say</h2>
+      <h2 class="step-title" tabindex="-1">Here's what the numbers say</h2>
       <p class="print-only" id="printDate"></p>
 
       <div id="verdictCard" class="verdict-card">
@@ -766,19 +800,20 @@
       <form class="send-box" id="sendForm" novalidate>
         <h3>Want a second opinion?</h3>
         <p>Send these results to Safe Travels and we'll get back to you. Nothing is sent unless you press the button.</p>
+        <p>Your name is required, plus an email <em>or</em> a phone number.</p>
         <div class="field">
-          <label for="sendName">Your name</label>
-          <input type="text" id="sendName" autocomplete="name">
+          <label for="sendName">Your name <span style="font-weight:500;color:var(--text-muted);">(required)</span></label>
+          <input type="text" id="sendName" autocomplete="name" aria-required="true">
         </div>
         <div>
           <div class="field">
             <label for="sendEmail">Email</label>
-            <input type="email" id="sendEmail" autocomplete="email" maxlength="254" placeholder="you@example.com">
+            <input type="email" id="sendEmail" autocomplete="email" maxlength="254" aria-describedby="sendEmailErr" placeholder="you@example.com">
             <p class="field-err" id="sendEmailErr"></p>
           </div>
           <div class="field">
             <label for="sendPhone">Phone</label>
-            <input type="tel" id="sendPhone" autocomplete="tel" maxlength="25" placeholder="(732) 555-1234">
+            <input type="tel" id="sendPhone" autocomplete="tel" maxlength="25" aria-describedby="sendPhoneErr" placeholder="(732) 555-1234">
             <p class="field-err" id="sendPhoneErr"></p>
           </div>
         </div>
@@ -800,7 +835,7 @@
 
       <a class="cta-link" id="resultCta" href="https://www.besafetravels.com" target="_blank" rel="noopener">
         <span id="resultCtaText">Book with Safe Travels</span>
-        <span class="arrow">↗</span>
+        <span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span>
       </a>
 
       <div class="disclaimer">
@@ -811,7 +846,7 @@
         <h3>Financing</h3>
         <p>Payments calculated from a price, APR and term are for illustration only. Your actual rate and terms depend on your lender and credit approval.</p>
         <h3>Rust, safety &amp; recalls</h3>
-        <p>Only a hands-on inspection can confirm rust damage or whether a car is safe to drive. If you suspect frame or brake-line rust, have it inspected before you spend money on other repairs. Check open recalls for free at <a href="https://www.nhtsa.gov/recalls" target="_blank" rel="noopener">nhtsa.gov/recalls</a>.</p>
+        <p>Only a hands-on inspection can confirm rust damage or whether a car is safe to drive. If you suspect frame or brake-line rust, have it inspected before you spend money on other repairs. Check open recalls for free at <a href="https://www.nhtsa.gov/recalls" target="_blank" rel="noopener">nhtsa.gov/recalls<span class="sr-only"> (opens in a new tab)</span></a>.</p>
         <h3>About us</h3>
         <p>Safe Travels Mobile Repair is an auto repair business, not a car dealer or lender. We may earn money if you choose to repair your car with us, so feel free to get a second opinion.</p>
         <h3>Your information</h3>
@@ -831,6 +866,8 @@
   var EMBEDDED = window.parent !== window;
   if(EMBEDDED){
     document.documentElement.classList.add('embedded');
+    var card = document.querySelector('.card');
+    card.insertBefore(document.getElementById('progress'), card.firstChild);
     var lastHeight = 0;
     var sendHeight = function(){
       var h = Math.ceil(document.body.getBoundingClientRect().height);
@@ -1036,14 +1073,21 @@
     });
     if(EMBEDDED) window.parent.postMessage({type:'st-fix-or-trade-scroll'}, '*');
     else window.scrollTo({top:0, behavior:'smooth'});
+    // Keyboard and screen-reader users land on the new step's heading (WCAG 2.4.3).
+    var heading = document.querySelector('#step'+i+' .step-title');
+    if(heading) heading.focus({preventScroll:true});
   }
 
   $('next0').addEventListener('click', function(){
     var year = parseInt($('year').value,10);
     var mileage = parseInt($('mileage').value,10);
     var err = $('err0');
-    if(!year || year<1990 || year>2027 || isNaN(mileage) || mileage<0){
+    var badYear = !year || year<1990 || year>2027, badMiles = isNaN(mileage) || mileage<0;
+    $('year').setAttribute('aria-invalid', badYear ? 'true' : 'false');
+    $('mileage').setAttribute('aria-invalid', badMiles ? 'true' : 'false');
+    if(badYear || badMiles){
       err.style.display='block';
+      $(badYear ? 'year' : 'mileage').focus();
       return;
     }
     err.style.display='none';
@@ -1077,10 +1121,12 @@
   var mode = 'payment';
   tabPayment.addEventListener('click', function(){
     mode='payment'; tabPayment.classList.add('active'); tabPrice.classList.remove('active');
+    tabPayment.setAttribute('aria-pressed','true'); tabPrice.setAttribute('aria-pressed','false');
     paymentMode.style.display='block'; priceMode.style.display='none';
   });
   tabPrice.addEventListener('click', function(){
     mode='price'; tabPrice.classList.add('active'); tabPayment.classList.remove('active');
+    tabPrice.setAttribute('aria-pressed','true'); tabPayment.setAttribute('aria-pressed','false');
     priceMode.style.display='block'; paymentMode.style.display='none';
   });
 
@@ -1090,7 +1136,7 @@
     var yrs = months/12;
     return (yrs % 1 === 0 ? yrs : yrs.toFixed(1)) + (yrs===1 ? ' year' : ' years');
   }
-  function renderHorizon(){ horizonOut.textContent = yearsText(parseInt(horizonInput.value,10)); }
+  function renderHorizon(){ var t = yearsText(parseInt(horizonInput.value,10)); horizonOut.textContent = t; horizonInput.setAttribute('aria-valuetext', t); }
   horizonInput.addEventListener('input', renderHorizon);
   renderHorizon();
 
@@ -1106,10 +1152,10 @@
     var err = $('err3');
     if(mode==='payment'){
       var p = parseFloat($('knownPayment').value);
-      if(!p || p<=0){ err.style.display='block'; return; }
+      if(!p || p<=0){ err.style.display='block'; $('knownPayment').focus(); return; }
     } else {
       var price = parseFloat($('price').value);
-      if(!price || price<=0){ err.style.display='block'; return; }
+      if(!price || price<=0){ err.style.display='block'; $('price').focus(); return; }
     }
     err.style.display='none';
     computeAndShow();

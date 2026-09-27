@@ -6,6 +6,15 @@
 &lt;head&gt;
 &lt;meta charset=&quot;UTF-8&quot;&gt;
 &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+&lt;script&gt;
+  // Inside an iframe (the Squarespace embed): hide our own header, use a transparent
+  // background and the light theme, so the tool blends into the host page. Runs before
+  // first paint so the header never flashes. Standalone visits are unaffected.
+  if (window.self !== window.top) {
+    document.documentElement.classList.add(&#x27;embedded&#x27;);
+    document.documentElement.setAttribute(&#x27;data-theme&#x27;, &#x27;light&#x27;);
+  }
+&lt;/script&gt;
 &lt;title&gt;Fix It or Trade It In? &#8212; Safe Travels&lt;/title&gt;
 &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;&gt;
 &lt;link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin&gt;
@@ -25,8 +34,13 @@
     --ink-on-blue: #FFFFFF;
     --text-body: #2A2E5C;
     --text-muted: #5C63A0;
-    --good: #2E9E6B;
+    --good: #1B6B47;
     --focus: #1B1E5C;
+    /* WCAG 2.2 AA: text/buttons &gt;= 4.5:1, control borders &gt;= 3:1 */
+    --btn: #4A5CD0;
+    --btn-hover: #3A4BB8;
+    --error: #B3361F;
+    --field-border: #737DBF;
     --shadow: 0 10px 30px rgba(27,30,92,0.12);
   }
   :root:not([data-theme=&quot;light&quot;]) {
@@ -46,6 +60,10 @@
       --text-muted: #A7ACDD;
       --good: #6FDBA6;
       --focus: #ECEFFF;
+      --btn: #8C9AF5;
+      --btn-hover: #A5B1F8;
+      --error: #FF7259;
+      --field-border: #8088D0;
       --shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
   }
@@ -65,6 +83,10 @@
     --text-muted: #A7ACDD;
     --good: #6FDBA6;
     --focus: #ECEFFF;
+    --btn: #8C9AF5;
+    --btn-hover: #A5B1F8;
+    --error: #FF7259;
+    --field-border: #8088D0;
     --shadow: 0 10px 30px rgba(0,0,0,0.4);
   }
 
@@ -77,8 +99,18 @@
     min-height:100vh;
     line-height:1.5;
   }
-  html.embedded body{ min-height:0; }
-  html.embedded .wrap{ padding-top:8px; }
+  /* Embedded: no header, no background of our own. Everything left sits inside the card,
+     so contrast never depends on the host page&#x27;s colors. */
+  html.embedded{ background:transparent; color-scheme:light; }
+  html.embedded body{ min-height:0; background:transparent; }
+  html.embedded .wrap{ padding:6px 10px 28px; }
+  html.embedded header.top, html.embedded .title-block .sub{ display:none; }
+  html.embedded .title-block{ margin:0; }
+  html.embedded .title-block h1{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  html.embedded .card .progress{ margin:0 0 18px; }
+  .sr-only{ position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  .step-title:focus{ outline:none; }
+  ::placeholder{ color: var(--text-muted); opacity:1; }
   .wrap{
     max-width: 640px;
     margin: 0 auto;
@@ -178,7 +210,7 @@
     width:100%;
     padding: 12px 14px;
     border-radius: 12px;
-    border: 1.5px solid var(--card-border);
+    border: 1.5px solid var(--field-border);
     background: var(--bg-soft);
     color: var(--text-body);
     font-family:&#x27;Inter&#x27;,sans-serif;
@@ -214,7 +246,7 @@
     cursor:pointer;
   }
   .toggle button.active{
-    background: var(--blue);
+    background: var(--btn);
     color: var(--ink-on-blue);
   }
 
@@ -238,7 +270,7 @@
     justify-content:space-between;
     gap:10px;
     text-decoration:none;
-    background: var(--coral);
+    background: #B93D26;
     color: #fff;
     padding: 14px 18px;
     border-radius: 14px;
@@ -246,7 +278,7 @@
     font-size:14.5px;
     margin-bottom:20px;
   }
-  .cta-link:hover{ background: var(--coral-deep); }
+  .cta-link:hover{ background: #A83520; }
   .cta-link .arrow{ font-size:18px; }
 
   .nav-buttons{
@@ -256,7 +288,7 @@
     margin-top: 22px;
   }
   button.primary{
-    background: var(--blue);
+    background: var(--btn);
     color: var(--ink-on-blue);
     border:none;
     padding: 13px 26px;
@@ -266,11 +298,11 @@
     font-size:15px;
     cursor:pointer;
   }
-  button.primary:hover{ background: var(--blue-deep); }
+  button.primary:hover{ background: var(--btn-hover); }
   button.ghost{
     background:transparent;
     color: var(--navy-soft);
-    border: 1.5px solid var(--card-border);
+    border: 1.5px solid var(--field-border);
     padding: 13px 22px;
     border-radius: 14px;
     font-family:&#x27;Inter&#x27;,sans-serif;
@@ -303,12 +335,11 @@
     color: #fff;
     margin-bottom: 20px;
   }
-  .verdict-card.fix{ background: linear-gradient(160deg, var(--navy) 0%, var(--navy-soft) 100%); }
-  .verdict-card.trade{ background: linear-gradient(160deg, var(--coral-deep) 0%, var(--coral) 100%); }
+  .verdict-card.fix{ background: linear-gradient(160deg, #1B1E5C 0%, #3A3F86 100%); }
+  .verdict-card.trade{ background: linear-gradient(160deg, #A83520 0%, #B93D26 100%); }
   .verdict-eyebrow{
     font-size:13px;
     font-weight:700;
-    opacity:0.85;
     margin:0 0 6px;
   }
   .verdict-headline{
@@ -405,7 +436,7 @@
   .step.active{ display:block; }
 
   .error-msg{
-    color: var(--coral-deep);
+    color: var(--error);
     font-size:13px;
     font-weight:600;
     margin: -8px 0 16px;
@@ -455,7 +486,7 @@
     width:100%;
     padding: 11px 13px;
     border-radius: 12px;
-    border: 1.5px solid var(--card-border);
+    border: 1.5px solid var(--field-border);
     background: var(--white);
     color: var(--text-body);
     font-family:&#x27;Inter&#x27;,sans-serif;
@@ -467,15 +498,15 @@
   .send-box .checkrow span{ font-size:12.5px; }
   .send-status{ font-size:13px; font-weight:600; margin: 0 0 14px; display:none; }
   .send-status.ok{ color: var(--good); display:block; }
-  .send-status.bad{ color: var(--coral-deep); display:block; }
+  .send-status.bad{ color: var(--error); display:block; }
   .send-box button.primary{ width:100%; margin-bottom:14px; }
 
   .disclaimer h3{ font-size:12.5px; font-weight:700; color: var(--text-body); margin:14px 0 4px; }
   .disclaimer p{ margin:0 0 8px; }
   .print-only{ display:none; }
   /* A line is always reserved for the message, so showing or clearing it never moves the form. */
-  .field-err{ color: var(--coral-deep); font-size:12.5px; font-weight:600; line-height:1.4; min-height:1.4em; margin:4px 0 -8px; }
-  .send-box input[aria-invalid=&quot;true&quot;]{ border-color: var(--coral-deep); }
+  .field-err{ color: var(--error); font-size:12.5px; font-weight:600; line-height:1.4; min-height:1.4em; margin:4px 0 -8px; }
+  .send-box input[aria-invalid=&quot;true&quot;], input[aria-invalid=&quot;true&quot;]{ border-color: var(--error); }
   .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
   @media print{
@@ -515,7 +546,7 @@
     &lt;p class=&quot;sub&quot;&gt;A quick, honest look at the numbers before you sign anything.&lt;/p&gt;
   &lt;/div&gt;
 
-  &lt;div class=&quot;progress&quot; id=&quot;progress&quot;&gt;
+  &lt;div class=&quot;progress&quot; id=&quot;progress&quot; aria-hidden=&quot;true&quot;&gt;
     &lt;div class=&quot;seg&quot; data-i=&quot;0&quot;&gt;&lt;/div&gt;
     &lt;div class=&quot;seg&quot; data-i=&quot;1&quot;&gt;&lt;/div&gt;
     &lt;div class=&quot;seg&quot; data-i=&quot;2&quot;&gt;&lt;/div&gt;
@@ -528,16 +559,16 @@
     &lt;!-- STEP 1: current car --&gt;
     &lt;div class=&quot;step active&quot; id=&quot;step0&quot;&gt;
       &lt;p class=&quot;step-label&quot;&gt;Step 1 of 5&lt;/p&gt;
-      &lt;h2 class=&quot;step-title&quot;&gt;Tell us about your current car&lt;/h2&gt;
+      &lt;h2 class=&quot;step-title&quot; tabindex=&quot;-1&quot;&gt;Tell us about your current car&lt;/h2&gt;
 
       &lt;div class=&quot;row2&quot;&gt;
         &lt;div class=&quot;field&quot;&gt;
           &lt;label for=&quot;year&quot;&gt;Model year&lt;/label&gt;
-          &lt;input type=&quot;number&quot; id=&quot;year&quot; inputmode=&quot;numeric&quot; placeholder=&quot;e.g. 2018&quot; min=&quot;1990&quot; max=&quot;2027&quot;&gt;
+          &lt;input type=&quot;number&quot; id=&quot;year&quot; inputmode=&quot;numeric&quot; aria-describedby=&quot;err0&quot; placeholder=&quot;e.g. 2018&quot; min=&quot;1990&quot; max=&quot;2027&quot;&gt;
         &lt;/div&gt;
         &lt;div class=&quot;field&quot;&gt;
           &lt;label for=&quot;mileage&quot;&gt;Mileage&lt;/label&gt;
-          &lt;input type=&quot;number&quot; id=&quot;mileage&quot; inputmode=&quot;numeric&quot; placeholder=&quot;e.g. 82000&quot; min=&quot;0&quot;&gt;
+          &lt;input type=&quot;number&quot; id=&quot;mileage&quot; inputmode=&quot;numeric&quot; aria-describedby=&quot;err0&quot; placeholder=&quot;e.g. 82000&quot; min=&quot;0&quot;&gt;
         &lt;/div&gt;
       &lt;/div&gt;
 
@@ -562,7 +593,7 @@
         &lt;input type=&quot;text&quot; id=&quot;platevin&quot; placeholder=&quot;Helps us if you send us your results&quot;&gt;
       &lt;/div&gt;
 
-      &lt;p class=&quot;error-msg&quot; id=&quot;err0&quot;&gt;Enter a model year and mileage to continue.&lt;/p&gt;
+      &lt;p class=&quot;error-msg&quot; id=&quot;err0&quot; role=&quot;alert&quot;&gt;Enter a model year and mileage to continue.&lt;/p&gt;
 
       &lt;div class=&quot;nav-buttons&quot;&gt;
         &lt;span&gt;&lt;/span&gt;
@@ -573,7 +604,7 @@
     &lt;!-- STEP 2: condition --&gt;
     &lt;div class=&quot;step&quot; id=&quot;step1&quot;&gt;
       &lt;p class=&quot;step-label&quot;&gt;Step 2 of 5&lt;/p&gt;
-      &lt;h2 class=&quot;step-title&quot;&gt;What shape is it in?&lt;/h2&gt;
+      &lt;h2 class=&quot;step-title&quot; tabindex=&quot;-1&quot;&gt;What shape is it in?&lt;/h2&gt;
 
       &lt;fieldset class=&quot;opts&quot;&gt;
         &lt;legend&gt;Overall condition&lt;/legend&gt;
@@ -606,7 +637,7 @@
           &lt;option value=&quot;yes&quot;&gt;Yes&lt;/option&gt;
           &lt;option value=&quot;no&quot;&gt;No&lt;/option&gt;
         &lt;/select&gt;
-        &lt;p class=&quot;hint&quot;&gt;Software problems are often fixed free under a recall or warranty. Check your VIN at &lt;a href=&quot;https://www.nhtsa.gov/recalls&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;nhtsa.gov/recalls&lt;/a&gt;.&lt;/p&gt;
+        &lt;p class=&quot;hint&quot;&gt;Software problems are often fixed free under a recall or warranty. Check your VIN at &lt;a href=&quot;https://www.nhtsa.gov/recalls&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;nhtsa.gov/recalls&lt;span class=&quot;sr-only&quot;&gt; (opens in a new tab)&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
       &lt;/div&gt;
 
       &lt;div class=&quot;nav-buttons&quot;&gt;
@@ -618,11 +649,11 @@
     &lt;!-- STEP 3: repair situation --&gt;
     &lt;div class=&quot;step&quot; id=&quot;step2&quot;&gt;
       &lt;p class=&quot;step-label&quot;&gt;Step 3 of 5&lt;/p&gt;
-      &lt;h2 class=&quot;step-title&quot;&gt;What&#x27;s it need right now?&lt;/h2&gt;
+      &lt;h2 class=&quot;step-title&quot; tabindex=&quot;-1&quot;&gt;What&#x27;s it need right now?&lt;/h2&gt;
 
       &lt;a class=&quot;cta-link&quot; href=&quot;https://www.besafetravels.com/calculator&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;
         &lt;span&gt;Get a free repair quote from Safe Travels&lt;/span&gt;
-        &lt;span class=&quot;arrow&quot;&gt;&#8599;&lt;/span&gt;
+        &lt;span class=&quot;arrow&quot; aria-hidden=&quot;true&quot;&gt;&#8599;&lt;/span&gt;&lt;span class=&quot;sr-only&quot;&gt; (opens in a new tab)&lt;/span&gt;
       &lt;/a&gt;
 
       &lt;label class=&quot;checkrow&quot; for=&quot;noRepair&quot;&gt;
@@ -645,18 +676,18 @@
     &lt;!-- STEP 4: new car --&gt;
     &lt;div class=&quot;step&quot; id=&quot;step3&quot;&gt;
       &lt;p class=&quot;step-label&quot;&gt;Step 4 of 5&lt;/p&gt;
-      &lt;h2 class=&quot;step-title&quot;&gt;The car you&#x27;re considering&lt;/h2&gt;
+      &lt;h2 class=&quot;step-title&quot; tabindex=&quot;-1&quot;&gt;The car you&#x27;re considering&lt;/h2&gt;
 
-      &lt;div class=&quot;toggle&quot; role=&quot;tablist&quot;&gt;
-        &lt;button type=&quot;button&quot; id=&quot;tabPayment&quot; class=&quot;active&quot;&gt;I know my payment&lt;/button&gt;
-        &lt;button type=&quot;button&quot; id=&quot;tabPrice&quot;&gt;Enter price &amp;amp; terms&lt;/button&gt;
+      &lt;div class=&quot;toggle&quot; role=&quot;group&quot; aria-label=&quot;How do you want to enter the new car&#x27;s cost?&quot;&gt;
+        &lt;button type=&quot;button&quot; id=&quot;tabPayment&quot; class=&quot;active&quot; aria-pressed=&quot;true&quot;&gt;I know my payment&lt;/button&gt;
+        &lt;button type=&quot;button&quot; id=&quot;tabPrice&quot; aria-pressed=&quot;false&quot;&gt;Enter price &amp;amp; terms&lt;/button&gt;
       &lt;/div&gt;
 
       &lt;div id=&quot;paymentMode&quot;&gt;
         &lt;div class=&quot;row2&quot;&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;knownPayment&quot;&gt;Monthly payment ($)&lt;/label&gt;
-            &lt;input type=&quot;number&quot; id=&quot;knownPayment&quot; inputmode=&quot;numeric&quot; placeholder=&quot;e.g. 480&quot; min=&quot;0&quot;&gt;
+            &lt;input type=&quot;number&quot; id=&quot;knownPayment&quot; inputmode=&quot;numeric&quot; aria-describedby=&quot;err3&quot; placeholder=&quot;e.g. 480&quot; min=&quot;0&quot;&gt;
           &lt;/div&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;knownTerm&quot;&gt;Term (months)&lt;/label&gt;
@@ -677,7 +708,7 @@
         &lt;div class=&quot;row2&quot;&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;price&quot;&gt;Vehicle price ($)&lt;/label&gt;
-            &lt;input type=&quot;number&quot; id=&quot;price&quot; inputmode=&quot;numeric&quot; placeholder=&quot;e.g. 32000&quot; min=&quot;0&quot;&gt;
+            &lt;input type=&quot;number&quot; id=&quot;price&quot; inputmode=&quot;numeric&quot; aria-describedby=&quot;err3&quot; placeholder=&quot;e.g. 32000&quot; min=&quot;0&quot;&gt;
           &lt;/div&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;down&quot;&gt;Cash down ($)&lt;/label&gt;
@@ -707,7 +738,7 @@
         &lt;div class=&quot;slider-value&quot;&gt;&lt;span&gt;1 yr&lt;/span&gt;&lt;span id=&quot;horizonOut&quot;&gt;3 years&lt;/span&gt;&lt;span&gt;7 yrs&lt;/span&gt;&lt;/div&gt;
       &lt;/div&gt;
 
-      &lt;p class=&quot;error-msg&quot; id=&quot;err3&quot;&gt;Enter a payment or a price to continue.&lt;/p&gt;
+      &lt;p class=&quot;error-msg&quot; id=&quot;err3&quot; role=&quot;alert&quot;&gt;Enter a payment or a price to continue.&lt;/p&gt;
 
       &lt;div class=&quot;nav-buttons&quot;&gt;
         &lt;button class=&quot;ghost&quot; id=&quot;back3&quot;&gt;Back&lt;/button&gt;
@@ -718,7 +749,7 @@
     &lt;!-- STEP 5: result --&gt;
     &lt;div class=&quot;step&quot; id=&quot;step4&quot;&gt;
       &lt;p class=&quot;step-label&quot;&gt;Step 5 of 5&lt;/p&gt;
-      &lt;h2 class=&quot;step-title&quot;&gt;Here&#x27;s what the numbers say&lt;/h2&gt;
+      &lt;h2 class=&quot;step-title&quot; tabindex=&quot;-1&quot;&gt;Here&#x27;s what the numbers say&lt;/h2&gt;
       &lt;p class=&quot;print-only&quot; id=&quot;printDate&quot;&gt;&lt;/p&gt;
 
       &lt;div id=&quot;verdictCard&quot; class=&quot;verdict-card&quot;&gt;
@@ -769,19 +800,20 @@
       &lt;form class=&quot;send-box&quot; id=&quot;sendForm&quot; novalidate&gt;
         &lt;h3&gt;Want a second opinion?&lt;/h3&gt;
         &lt;p&gt;Send these results to Safe Travels and we&#x27;ll get back to you. Nothing is sent unless you press the button.&lt;/p&gt;
+        &lt;p&gt;Your name is required, plus an email &lt;em&gt;or&lt;/em&gt; a phone number.&lt;/p&gt;
         &lt;div class=&quot;field&quot;&gt;
-          &lt;label for=&quot;sendName&quot;&gt;Your name&lt;/label&gt;
-          &lt;input type=&quot;text&quot; id=&quot;sendName&quot; autocomplete=&quot;name&quot;&gt;
+          &lt;label for=&quot;sendName&quot;&gt;Your name &lt;span style=&quot;font-weight:500;color:var(--text-muted);&quot;&gt;(required)&lt;/span&gt;&lt;/label&gt;
+          &lt;input type=&quot;text&quot; id=&quot;sendName&quot; autocomplete=&quot;name&quot; aria-required=&quot;true&quot;&gt;
         &lt;/div&gt;
         &lt;div&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;sendEmail&quot;&gt;Email&lt;/label&gt;
-            &lt;input type=&quot;email&quot; id=&quot;sendEmail&quot; autocomplete=&quot;email&quot; maxlength=&quot;254&quot; placeholder=&quot;you@example.com&quot;&gt;
+            &lt;input type=&quot;email&quot; id=&quot;sendEmail&quot; autocomplete=&quot;email&quot; maxlength=&quot;254&quot; aria-describedby=&quot;sendEmailErr&quot; placeholder=&quot;you@example.com&quot;&gt;
             &lt;p class=&quot;field-err&quot; id=&quot;sendEmailErr&quot;&gt;&lt;/p&gt;
           &lt;/div&gt;
           &lt;div class=&quot;field&quot;&gt;
             &lt;label for=&quot;sendPhone&quot;&gt;Phone&lt;/label&gt;
-            &lt;input type=&quot;tel&quot; id=&quot;sendPhone&quot; autocomplete=&quot;tel&quot; maxlength=&quot;25&quot; placeholder=&quot;(732) 555-1234&quot;&gt;
+            &lt;input type=&quot;tel&quot; id=&quot;sendPhone&quot; autocomplete=&quot;tel&quot; maxlength=&quot;25&quot; aria-describedby=&quot;sendPhoneErr&quot; placeholder=&quot;(732) 555-1234&quot;&gt;
             &lt;p class=&quot;field-err&quot; id=&quot;sendPhoneErr&quot;&gt;&lt;/p&gt;
           &lt;/div&gt;
         &lt;/div&gt;
@@ -803,7 +835,7 @@
 
       &lt;a class=&quot;cta-link&quot; id=&quot;resultCta&quot; href=&quot;https://www.besafetravels.com&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;
         &lt;span id=&quot;resultCtaText&quot;&gt;Book with Safe Travels&lt;/span&gt;
-        &lt;span class=&quot;arrow&quot;&gt;&#8599;&lt;/span&gt;
+        &lt;span class=&quot;arrow&quot; aria-hidden=&quot;true&quot;&gt;&#8599;&lt;/span&gt;&lt;span class=&quot;sr-only&quot;&gt; (opens in a new tab)&lt;/span&gt;
       &lt;/a&gt;
 
       &lt;div class=&quot;disclaimer&quot;&gt;
@@ -814,7 +846,7 @@
         &lt;h3&gt;Financing&lt;/h3&gt;
         &lt;p&gt;Payments calculated from a price, APR and term are for illustration only. Your actual rate and terms depend on your lender and credit approval.&lt;/p&gt;
         &lt;h3&gt;Rust, safety &amp;amp; recalls&lt;/h3&gt;
-        &lt;p&gt;Only a hands-on inspection can confirm rust damage or whether a car is safe to drive. If you suspect frame or brake-line rust, have it inspected before you spend money on other repairs. Check open recalls for free at &lt;a href=&quot;https://www.nhtsa.gov/recalls&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;nhtsa.gov/recalls&lt;/a&gt;.&lt;/p&gt;
+        &lt;p&gt;Only a hands-on inspection can confirm rust damage or whether a car is safe to drive. If you suspect frame or brake-line rust, have it inspected before you spend money on other repairs. Check open recalls for free at &lt;a href=&quot;https://www.nhtsa.gov/recalls&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;nhtsa.gov/recalls&lt;span class=&quot;sr-only&quot;&gt; (opens in a new tab)&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;
         &lt;h3&gt;About us&lt;/h3&gt;
         &lt;p&gt;Safe Travels Mobile Repair is an auto repair business, not a car dealer or lender. We may earn money if you choose to repair your car with us, so feel free to get a second opinion.&lt;/p&gt;
         &lt;h3&gt;Your information&lt;/h3&gt;
@@ -834,6 +866,8 @@
   var EMBEDDED = window.parent !== window;
   if(EMBEDDED){
     document.documentElement.classList.add(&#x27;embedded&#x27;);
+    var card = document.querySelector(&#x27;.card&#x27;);
+    card.insertBefore(document.getElementById(&#x27;progress&#x27;), card.firstChild);
     var lastHeight = 0;
     var sendHeight = function(){
       var h = Math.ceil(document.body.getBoundingClientRect().height);
@@ -1039,14 +1073,21 @@
     });
     if(EMBEDDED) window.parent.postMessage({type:&#x27;st-fix-or-trade-scroll&#x27;}, &#x27;*&#x27;);
     else window.scrollTo({top:0, behavior:&#x27;smooth&#x27;});
+    // Keyboard and screen-reader users land on the new step&#x27;s heading (WCAG 2.4.3).
+    var heading = document.querySelector(&#x27;#step&#x27;+i+&#x27; .step-title&#x27;);
+    if(heading) heading.focus({preventScroll:true});
   }
 
   $(&#x27;next0&#x27;).addEventListener(&#x27;click&#x27;, function(){
     var year = parseInt($(&#x27;year&#x27;).value,10);
     var mileage = parseInt($(&#x27;mileage&#x27;).value,10);
     var err = $(&#x27;err0&#x27;);
-    if(!year || year&lt;1990 || year&gt;2027 || isNaN(mileage) || mileage&lt;0){
+    var badYear = !year || year&lt;1990 || year&gt;2027, badMiles = isNaN(mileage) || mileage&lt;0;
+    $(&#x27;year&#x27;).setAttribute(&#x27;aria-invalid&#x27;, badYear ? &#x27;true&#x27; : &#x27;false&#x27;);
+    $(&#x27;mileage&#x27;).setAttribute(&#x27;aria-invalid&#x27;, badMiles ? &#x27;true&#x27; : &#x27;false&#x27;);
+    if(badYear || badMiles){
       err.style.display=&#x27;block&#x27;;
+      $(badYear ? &#x27;year&#x27; : &#x27;mileage&#x27;).focus();
       return;
     }
     err.style.display=&#x27;none&#x27;;
@@ -1080,10 +1121,12 @@
   var mode = &#x27;payment&#x27;;
   tabPayment.addEventListener(&#x27;click&#x27;, function(){
     mode=&#x27;payment&#x27;; tabPayment.classList.add(&#x27;active&#x27;); tabPrice.classList.remove(&#x27;active&#x27;);
+    tabPayment.setAttribute(&#x27;aria-pressed&#x27;,&#x27;true&#x27;); tabPrice.setAttribute(&#x27;aria-pressed&#x27;,&#x27;false&#x27;);
     paymentMode.style.display=&#x27;block&#x27;; priceMode.style.display=&#x27;none&#x27;;
   });
   tabPrice.addEventListener(&#x27;click&#x27;, function(){
     mode=&#x27;price&#x27;; tabPrice.classList.add(&#x27;active&#x27;); tabPayment.classList.remove(&#x27;active&#x27;);
+    tabPrice.setAttribute(&#x27;aria-pressed&#x27;,&#x27;true&#x27;); tabPayment.setAttribute(&#x27;aria-pressed&#x27;,&#x27;false&#x27;);
     priceMode.style.display=&#x27;block&#x27;; paymentMode.style.display=&#x27;none&#x27;;
   });
 
@@ -1093,7 +1136,7 @@
     var yrs = months/12;
     return (yrs % 1 === 0 ? yrs : yrs.toFixed(1)) + (yrs===1 ? &#x27; year&#x27; : &#x27; years&#x27;);
   }
-  function renderHorizon(){ horizonOut.textContent = yearsText(parseInt(horizonInput.value,10)); }
+  function renderHorizon(){ var t = yearsText(parseInt(horizonInput.value,10)); horizonOut.textContent = t; horizonInput.setAttribute(&#x27;aria-valuetext&#x27;, t); }
   horizonInput.addEventListener(&#x27;input&#x27;, renderHorizon);
   renderHorizon();
 
@@ -1109,10 +1152,10 @@
     var err = $(&#x27;err3&#x27;);
     if(mode===&#x27;payment&#x27;){
       var p = parseFloat($(&#x27;knownPayment&#x27;).value);
-      if(!p || p&lt;=0){ err.style.display=&#x27;block&#x27;; return; }
+      if(!p || p&lt;=0){ err.style.display=&#x27;block&#x27;; $(&#x27;knownPayment&#x27;).focus(); return; }
     } else {
       var price = parseFloat($(&#x27;price&#x27;).value);
-      if(!price || price&lt;=0){ err.style.display=&#x27;block&#x27;; return; }
+      if(!price || price&lt;=0){ err.style.display=&#x27;block&#x27;; $(&#x27;price&#x27;).focus(); return; }
     }
     err.style.display=&#x27;none&#x27;;
     computeAndShow();
