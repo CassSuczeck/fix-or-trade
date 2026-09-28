@@ -14,8 +14,9 @@
  * so the same /exec URL serves the new code.
  */
 
-// ID of the Google Sheet that holds the leads: the long part of its URL,
-// docs.google.com/spreadsheets/d/<THIS PART>/edit. Can be the calculator's lead sheet.
+// The Google Sheet that holds the leads. Paste either its full link or just its ID
+// (the long part of docs.google.com/spreadsheets/d/<THIS PART>/edit). Keep the quotes.
+// Can be the calculator's lead sheet.
 var SHEET_ID = 'PASTE_SPREADSHEET_ID_HERE';
 var SHEET_NAME = 'Fix or Trade Leads';
 var NOTIFY_EMAIL = 'info@besafetravels.com'; // '' to turn off notification emails
@@ -81,14 +82,18 @@ function doGet() {
 
 // Run once from the editor (select setup → Run) to create the tab and grant permissions.
 function setup() {
-  sheet_();
+  var sh = sheet_();
+  console.log('Ready: leads will go to the "' + sh.getName() + '" tab of "' + sh.getParent().getName() + '".');
 }
 
 function sheet_() {
-  var ss = SHEET_ID && SHEET_ID !== 'PASTE_SPREADSHEET_ID_HERE'
-    ? SpreadsheetApp.openById(SHEET_ID)
+  var id = String(SHEET_ID || '').trim();
+  var fromUrl = /\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/.exec(id);
+  if (fromUrl) id = fromUrl[1];
+  var ss = id && id !== 'PASTE_SPREADSHEET_ID_HERE'
+    ? SpreadsheetApp.openById(id)
     : SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss) throw new Error('Set SHEET_ID at the top of Code.gs.');
+  if (!ss) throw new Error('Set SHEET_ID at the top of Code.gs to your spreadsheet link or ID.');
   var sh = ss.getSheetByName(SHEET_NAME);
   if (!sh) {
     sh = ss.insertSheet(SHEET_NAME);
