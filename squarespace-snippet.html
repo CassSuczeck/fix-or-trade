@@ -41,6 +41,7 @@
     --btn-hover: #3A4BB8;
     --error: #B3361F;
     --field-border: #737DBF;
+    --accent-text: #3A4BB8;
     --shadow: 0 10px 30px rgba(27,30,92,0.12);
   }
   :root:not([data-theme=&quot;light&quot;]) {
@@ -64,6 +65,7 @@
       --btn-hover: #A5B1F8;
       --error: #FF7259;
       --field-border: #8088D0;
+      --accent-text: #8C9AF5;
       --shadow: 0 10px 30px rgba(0,0,0,0.4);
     }
   }
@@ -87,6 +89,7 @@
     --btn-hover: #A5B1F8;
     --error: #FF7259;
     --field-border: #8088D0;
+    --accent-text: #8C9AF5;
     --shadow: 0 10px 30px rgba(0,0,0,0.4);
   }
 
@@ -138,7 +141,7 @@
     font-weight:600;
     font-size:11px;
     letter-spacing:0.08em;
-    color: var(--blue-deep);
+    color: var(--accent-text);
   }
   .title-block{ margin: 6px 0 26px; }
   h1{
@@ -150,7 +153,7 @@
     line-height:1.15;
   }
   .sub{
-    color: var(--blue-deep);
+    color: var(--accent-text);
     font-weight:600;
     font-size:16px;
     margin:0;
@@ -880,9 +883,12 @@
   // ---- Configuration ----
   var CONFIG = {
     leadEmail: &#x27;info@besafetravels.com&#x27;,
-    // Form-to-email service that delivers &quot;Send my results&quot; submissions to leadEmail.
-    // FormSubmit needs no account: the first submission sends an activation email to leadEmail.
-    // Swap for your website&#x27;s own form handler if you have one. Set to &#x27;&#x27; to use only the email-app fallback.
+    // Where &quot;Send my results&quot; submissions go:
+    //  - Google Apps Script web app (apps-script/Code.gs): paste its https://script.google.com/macros/s/&#8230;/exec URL.
+    //    Leads land in the &quot;Fix or Trade Leads&quot; tab of the Google Sheet, and info@ gets an email.
+    //  - FormSubmit (current, until the Apps Script URL is in): emails leadEmail; the first
+    //    submission sends an activation email to leadEmail.
+    //  - &#x27;&#x27; sends nothing and opens the customer&#x27;s email app instead.
     submitEndpoint: &#x27;https://formsubmit.co/ajax/info@besafetravels.com&#x27;
   };
 
@@ -1524,28 +1530,43 @@
       return;
     }
 
-    var payload = {
-      _subject: &#x27;Fix or trade-in results: &#x27; + contact.name + &#x27; (&#x27; + lastResult.verdict + &#x27;)&#x27;,
-      _template: &#x27;box&#x27;,
-      _captcha: &#x27;false&#x27;, // FormSubmit&#x27;s captcha needs a page redirect, which this in-page form can&#x27;t use
-      _honey: &#x27;&#x27;,
-      name: contact.name,
-      email: contact.email,
-      phone: contact.phone,
-      message: resultText(contact)
-    };
-    if(contact.email) payload._replyto = contact.email;
+    var useAppsScript = /^https:\/\/script\.google\.com\//.test(CONFIG.submitEndpoint);
+    var payload, request;
+    if(useAppsScript){
+      // Apps Script can&#x27;t answer a CORS preflight, so send a &quot;simple&quot; request: text/plain body
+      // (still JSON inside) and no custom headers. Code.gs reads it with JSON.parse(e.postData.contents).
+      payload = {
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        verdict: lastResult.verdict,
+        consent: true,
+        website: $(&#x27;sendWebsite&#x27;).value, // bot trap, checked again on the server
+        message: resultText(contact)
+      };
+      request = {method:&#x27;POST&#x27;, headers:{&#x27;Content-Type&#x27;:&#x27;text/plain;charset=utf-8&#x27;}, body: JSON.stringify(payload)};
+    } else {
+      payload = {
+        _subject: &#x27;Fix or trade-in results: &#x27; + contact.name + &#x27; (&#x27; + lastResult.verdict + &#x27;)&#x27;,
+        _template: &#x27;box&#x27;,
+        _captcha: &#x27;false&#x27;, // FormSubmit&#x27;s captcha needs a page redirect, which this in-page form can&#x27;t use
+        _honey: &#x27;&#x27;,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        message: resultText(contact)
+      };
+      if(contact.email) payload._replyto = contact.email;
+      request = {method:&#x27;POST&#x27;, headers:{&#x27;Content-Type&#x27;:&#x27;application/json&#x27;, &#x27;Accept&#x27;:&#x27;application/json&#x27;}, body: JSON.stringify(payload)};
+    }
 
     var btn = $(&#x27;sendBtn&#x27;);
     btn.disabled = true;
     setStatus(&#x27;ok&#x27;, &#x27;Sending&#8230;&#x27;);
-    fetch(CONFIG.submitEndpoint, {
-      method: &#x27;POST&#x27;,
-      headers: {&#x27;Content-Type&#x27;:&#x27;application/json&#x27;, &#x27;Accept&#x27;:&#x27;application/json&#x27;},
-      body: JSON.stringify(payload)
-    }).then(function(res){
+    fetch(CONFIG.submitEndpoint, request).then(function(res){
       return res.json().catch(function(){ return {}; }).then(function(body){
-        if(!res.ok || body.success === false || body.success === &#x27;false&#x27;) throw new Error(body.message || &#x27;Send failed&#x27;);
+        // Apps Script answers {success:true}; FormSubmit answers {success:&quot;true&quot;}.
+        if(!res.ok || !(body.success === true || body.success === &#x27;true&#x27;)) throw new Error(body.message || &#x27;Send failed&#x27;);
       });
     }).then(function(){
       setStatus(&#x27;ok&#x27;, &#x27;Sent! We\&#x27;ll be in touch soon.&#x27;);

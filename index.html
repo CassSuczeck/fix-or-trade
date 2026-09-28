@@ -880,9 +880,12 @@
   // ---- Configuration ----
   var CONFIG = {
     leadEmail: 'info@besafetravels.com',
-    // Form-to-email service that delivers "Send my results" submissions to leadEmail.
-    // FormSubmit needs no account: the first submission sends an activation email to leadEmail.
-    // Swap for your website's own form handler if you have one. Set to '' to use only the email-app fallback.
+    // Where "Send my results" submissions go:
+    //  - Google Apps Script web app (apps-script/Code.gs): paste its https://script.google.com/macros/s/…/exec URL.
+    //    Leads land in the "Fix or Trade Leads" tab of the Google Sheet, and info@ gets an email.
+    //  - FormSubmit (current, until the Apps Script URL is in): emails leadEmail; the first
+    //    submission sends an activation email to leadEmail.
+    //  - '' sends nothing and opens the customer's email app instead.
     submitEndpoint: 'https://formsubmit.co/ajax/info@besafetravels.com'
   };
 
@@ -1524,28 +1527,43 @@
       return;
     }
 
-    var payload = {
-      _subject: 'Fix or trade-in results: ' + contact.name + ' (' + lastResult.verdict + ')',
-      _template: 'box',
-      _captcha: 'false', // FormSubmit's captcha needs a page redirect, which this in-page form can't use
-      _honey: '',
-      name: contact.name,
-      email: contact.email,
-      phone: contact.phone,
-      message: resultText(contact)
-    };
-    if(contact.email) payload._replyto = contact.email;
+    var useAppsScript = /^https:\/\/script\.google\.com\//.test(CONFIG.submitEndpoint);
+    var payload, request;
+    if(useAppsScript){
+      // Apps Script can't answer a CORS preflight, so send a "simple" request: text/plain body
+      // (still JSON inside) and no custom headers. Code.gs reads it with JSON.parse(e.postData.contents).
+      payload = {
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        verdict: lastResult.verdict,
+        consent: true,
+        website: $('sendWebsite').value, // bot trap, checked again on the server
+        message: resultText(contact)
+      };
+      request = {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload)};
+    } else {
+      payload = {
+        _subject: 'Fix or trade-in results: ' + contact.name + ' (' + lastResult.verdict + ')',
+        _template: 'box',
+        _captcha: 'false', // FormSubmit's captcha needs a page redirect, which this in-page form can't use
+        _honey: '',
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        message: resultText(contact)
+      };
+      if(contact.email) payload._replyto = contact.email;
+      request = {method:'POST', headers:{'Content-Type':'application/json', 'Accept':'application/json'}, body: JSON.stringify(payload)};
+    }
 
     var btn = $('sendBtn');
     btn.disabled = true;
     setStatus('ok', 'Sending…');
-    fetch(CONFIG.submitEndpoint, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', 'Accept':'application/json'},
-      body: JSON.stringify(payload)
-    }).then(function(res){
+    fetch(CONFIG.submitEndpoint, request).then(function(res){
       return res.json().catch(function(){ return {}; }).then(function(body){
-        if(!res.ok || body.success === false || body.success === 'false') throw new Error(body.message || 'Send failed');
+        // Apps Script answers {success:true}; FormSubmit answers {success:"true"}.
+        if(!res.ok || !(body.success === true || body.success === 'true')) throw new Error(body.message || 'Send failed');
       });
     }).then(function(){
       setStatus('ok', 'Sent! We\'ll be in touch soon.');

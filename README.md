@@ -10,6 +10,7 @@ A free, 5-step web tool that helps a car owner decide whether to repair their cu
 | `squarespace-snippet.html` | The whole tool as one paste-in Squarespace Embed Block. Generated; don't edit by hand. |
 | `build-squarespace-snippet.py` | Rebuilds `squarespace-snippet.html` from `index.html`. |
 | `embed.html` | Short embed for when the tool is hosted on GitHub Pages. |
+| `apps-script/Code.gs` | Google Apps Script web app that saves leads to the Google Sheet and emails info@. |
 | `README.md` | This document. |
 | `TROUBLESHOOTING.md` | Checklist and findings log for the Squarespace embed. |
 
@@ -90,33 +91,66 @@ The tool adds up points, and more than 0 points means "Trade it in".
 - **Use a researched range:** add a row to `OVERRIDES`. It replaces the formula for that model.
 - **Refresh every year:** the reference values are for 2018 cars priced in 2026. Each year, re-check a few `OVERRIDES` against KBB or Edmunds and nudge the `SEGMENTS` base values to match.
 
-## 3. Sending results by email
+## 3. Sending results (leads)
 
-When the customer presses **Send my results to Safe Travels**, the tool posts their name, email/phone, note, answers and result to a form-to-email service. The service then emails it to **info@besafetravels.com**.
+When the customer presses **Send my results to Safe Travels**, the tool sends their name, email/phone, the verdict, and a summary of their answers and result to `CONFIG.submitEndpoint`, set at the top of the script in `index.html`. The tool picks the format from the address:
 
-The settings are at the top of the script:
+| `submitEndpoint` | Where leads go | Status |
+|---|---|---|
+| `https://script.google.com/macros/s/…/exec` | **Google Sheet** ("Fix or Trade Leads" tab) plus a notification email to info@, via `apps-script/Code.gs` | **Recommended.** Code is ready; waiting for deployment. |
+| `https://formsubmit.co/ajax/info@besafetravels.com` | Email to info@ via FormSubmit (outside service) | Current setting. Needs one-time activation. |
+| `''` | Nothing is sent; the customer's email app opens with the results filled in | Fallback |
 
-```js
-var CONFIG = {
-  leadEmail: 'info@besafetravels.com',
-  submitEndpoint: 'https://formsubmit.co/ajax/info@besafetravels.com'
-};
-```
+### Setting up the Google Sheet route (about 10 minutes)
+1. **Pick the spreadsheet.** It can be the one your calculator leads go to. Copy its ID, the long part of its address: `docs.google.com/spreadsheets/d/`**`THIS_PART`**`/edit`.
+2. **Create a new, separate Apps Script project** at https://script.google.com → **New project**, and name it *Fix or Trade leads*.
+   - **Don't paste this into the calculator's script.** Two `doPost` functions in one project collide and could break calculator leads.
+3. **Paste the script.** Replace the editor's contents with `apps-script/Code.gs` from this repo, set `SHEET_ID` at the top, and save.
+4. **Run setup once.** Choose **setup** in the function menu, click **Run**, and approve the permissions it asks for (Sheets, email, cache). This creates the *Fix or Trade Leads* tab with its headers.
+5. **Deploy it.** Click **Deploy → New deployment → ⚙ → Web app**. Set *Execute as* to **Me** and *Who has access* to **Anyone**, then click **Deploy** and copy the **Web app URL** (it ends in `/exec`).
+6. **Check it's running.** Open that URL in a browser. It should show `{"ok":true,"service":"fix-or-trade leads"}`.
+7. **Connect the tool.** Set `submitEndpoint` in `index.html` to that URL and push to `main`, or send the URL to Claude to do it. The live page updates within about 2 minutes.
+8. **Test from the live Squarespace page:** send a test lead, confirm the row and the email arrive, then delete the test row.
 
-- **Why a separate service:** Squarespace forms only accept submissions from Squarespace's own Form Block, so custom code needs a form-to-email service.
-- **FormSubmit (current setting)** is free and needs no account. **The very first submission sends an activation email to info@besafetravels.com.** Click the link in it, and every later submission is delivered.
-- **Switching to Formspree** (free tier, with an account and dashboard): create a form, then set `submitEndpoint` to `https://formspree.io/f/YOUR_ID`.
-- **If sending fails,** or `submitEndpoint` is `''`, the customer gets an "Email it to us instead" link. It opens their own email app with the results already filled in.
-- **Privacy:** customer contact details pass through the form service. Mention the service in your privacy and AI usage policies.
-- **What gets sent:** name, email, phone, the optional note, and the full results summary (year, make, model, mileage, VIN or plate if entered). There's no address field, though a customer could type one into the note. Nothing is sent until the customer ticks the consent box and presses Send.
-- **Contact checks:** the customer must give their name plus an email or a phone number.
-  - **Email:** must look like a real address with a proper ending (.com, .net, .co.uk…). This catches typos like `jane@gmail`, but it can't prove the mailbox exists.
-  - **Phone:** must be a valid US number: 10 digits, an optional leading 1, and an optional extension. Area codes and exchanges starting with 0 or 1, N11 codes like 911, and repeated digits like 222-222-2222 are rejected.
-  - **Tidying:** valid entries are cleaned up before sending, e.g. `7325551234` becomes `(732) 555-1234` and the email domain is lowercased.
-  - **When checks run:** when the customer leaves the field, and again when they press Send. Error messages appear in a line reserved under each field, so the form never jumps under their cursor.
-- **Spam protection:** a hidden bot-trap field (`_honey`). People never see it, so if it's filled in, the tool shows "Sent!" but sends nothing. FormSubmit's captcha is turned off (`_captcha: 'false'`) because it only works when the form sends the customer to a FormSubmit page, and this tool sends in the background.
-- **Limits:** whatever address the tool sends to has to be in the page's code, whether it's the raw email, a FormSubmit alias, or an Apps Script URL. So a determined bot can always post to it directly, and the bot trap only stops bots that fill in the form itself. After activation, FormSubmit offers a random-string alias. It keeps the address away from email scrapers, but info@ is public on the site and in the email fallback anyway.
-- **Leads land only in email.** Unlike the /calculator leads, they don't reach the Google Sheet. The alternative is to send them to a Google Apps Script web app like the calculator's, which can add a row to the Sheet and email info@, with no outside service involved.
+After changing `Code.gs`, go to **Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy**. That keeps the same `/exec` URL. A brand-new deployment gets a new URL, which would then have to go into `index.html` too.
+
+**Sheet columns:** Timestamp · Name · Email · Phone · Verdict · Consent · Answers & result
+
+### What the server script checks
+The browser checks can be skipped by anyone posting to the URL directly, so `Code.gs` checks again:
+- **Bot trap:** if the hidden `website` field is filled, it answers "success" but saves nothing.
+- **Required fields:** a name, plus an email or phone. The email must be valid, the phone must be in the tool's `(732) 555-1234` format, the verdict must be *Fix it* or *Trade it in*, and consent must be `true`.
+- **Length caps:** name 100, email 254, phone 40, summary 6,000 characters. Control characters are stripped.
+- **Formula injection:** a value starting with `=`, `+`, `-` or `@` gets a leading `'`, so it's stored as text and never runs as a spreadsheet formula.
+- **Flood guard:** at most 30 submissions per 10 minutes across everyone. Change `MAX_PER_10_MIN` to adjust.
+- **Row safety:** a script lock stops simultaneous submissions from colliding.
+- **Notification email:** optional (`NOTIFY_EMAIL`). If it fails, the row is still saved. Replying to the email goes to the customer's address. Google limits free accounts to about 100 emails a day.
+
+### How the tool talks to Apps Script
+Apps Script can't answer a browser's CORS "preflight" check. So the tool sends a plain request with the body type `text/plain;charset=utf-8` (the body is still JSON) and no custom headers, and `Code.gs` reads it with `JSON.parse(e.postData.contents)`. The script answers `{success:true}` or `{success:false, message}`, which the tool reads to show "Sent!" or the "Email it to us instead" link. Tested outcomes:
+
+| Situation | What the customer sees |
+|---|---|
+| Accepted | "Sent! We'll be in touch soon." |
+| Rejected by the server | Email-app fallback link |
+| Network or Google outage | Email-app fallback link |
+
+### FormSubmit (current setting until the Sheet route is live)
+- It's free and needs no account. **The very first submission sends an activation email to info@besafetravels.com.** Click the link in it to receive later submissions.
+- Customer contact details pass through FormSubmit, an outside service. Mention it in your privacy and AI usage policies if you keep it.
+
+### What gets sent and checked in the browser
+- **Data:** name, email, phone, the optional note, the verdict, and the full results summary (year, make, model, mileage, VIN or plate if entered). There's no address field, though a customer could type one into the note. Nothing is sent until the customer ticks the consent box and presses Send.
+- **Required:** the customer's name, plus an email or a phone number.
+- **Email:** must look like a real address with a proper ending. This catches typos like `jane@gmail`, but it can't prove the mailbox exists.
+- **Phone:** must be a valid US number: 10 digits, an optional leading 1, and an optional extension. It rejects area codes and exchanges starting with 0 or 1, N11 codes like 911, and repeated digits.
+- **Tidying:** valid entries are cleaned up before sending, e.g. `(732) 555-1234`, with the email domain lowercased.
+- **When checks run:** when the customer leaves the field, and again on Send. Messages appear in a line reserved under each field, so the form never jumps under the customer's cursor.
+- **Bot trap:** a hidden field people never see. If it's filled, the tool shows "Sent!" but sends nothing.
+- **Limits:** the send address has to be in the page's code, so a determined bot can always post to it directly. The server checks and the flood guard above are the backstop.
+
+### Privacy
+The disclaimer promises that answers are used "only to reply to your request". Keep the lead sheet private to Safe Travels: don't share it or publish it to the web.
 
 ## 4. Hosting (GitHub Pages)
 
@@ -196,7 +230,7 @@ The result page includes a disclaimer written with New Jersey in mind:
 | This repo | Public, `main` branch |
 | GitHub Pages hosting | Turned on; first deploy succeeded (1:15 PM ET). The address returned **404** when first checked; see `TROUBLESHOOTING.md`. |
 | Squarespace test page | `besafetravels.com/fix-or-trade` made with an **older** paste-in snippet. It "kinda worked" and the page is **disabled**. Now troubleshooting `embed.html` with Claude in Chrome (`TROUBLESHOOTING.md`). |
-| Where leads go | FormSubmit → info@besafetravels.com. **Not activated yet.** Decision pending: stay with FormSubmit, or use Apps Script → the calculator's Google Sheet. |
+| Where leads go | **Decided: Google Sheet via Apps Script.** `apps-script/Code.gs` is written and tested. Waiting on you to deploy it and send the `/exec` URL (section 3). Until then, FormSubmit is still set (not activated). |
 | Disclaimer | Drafted; **needs attorney review** |
 
 ### Next steps, in order
@@ -204,9 +238,7 @@ The result page includes a disclaimer written with New Jersey in mind:
 2. **Turn on GitHub Pages** (Settings → Pages → Deploy from a branch → `main` / root). Confirm https://casssuczeck.github.io/fix-or-trade/ loads.
 3. **Swap the test page to `embed.html`.** It replaces the old snippet, which is missing the bot trap and the email and phone checks. From then on, every update to the tool reaches the page automatically. If `embed.html` doesn't work in Squarespace, paste the current `squarespace-snippet.html` instead.
 4. **Formatting pass.** Adjust the section around the tool in Squarespace. Send Claude any in-tool changes, such as hiding the duplicate heading or using a transparent background.
-5. **Decide where leads go.**
-   - **FormSubmit:** send one test from the page, then click the activation email in info@ (check spam).
-   - **Google Sheet:** share the calculator's Apps Script code or URL and the Sheet's column headers with Claude.
+5. **Deploy the lead sheet script** (section 3, steps 1–6) and send Claude the `/exec` URL. Claude switches the tool over. Then send a test lead from the live page and confirm the row and email arrive.
 6. **Attorney review** of the disclaimer and privacy wording (section 6). Add the form service to your privacy and AI usage policies.
 7. **Spot-check values** for the 5–10 cars your customers drive most, against KBB or Edmunds trade-in values.
 8. **Run the live-page tests** (section 5 checklist) on a phone and a desktop, in a private window.
