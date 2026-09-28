@@ -2,7 +2,9 @@
 
 A free, 5-step web tool that helps a car owner decide whether to repair their current car or trade it in. It's built as one self-contained web page for Safe Travels Mobile Repair (Middletown / Port Monmouth, NJ).
 
-**Status (Sep 26, 2026):** built and tested. A test page exists at **besafetravels.com/fix-or-trade**, but it's **disabled (not live)**. See [Status & next steps](#status--next-steps).
+**Status (Sep 28, 2026):** **live** at **besafetravels.com/fix-or-trade**, not linked from the menu, no password. Leads still go through FormSubmit; the Google Sheet script is written but not deployed. See [Status & next steps](#status--next-steps).
+
+**Project management:** this tool and the `/calculator` are handled from **one** Claude Code chat, which works in both repos. The shared status file is `PROJECT-STATUS.md` → "Goal 2" in the private `CassSuczeck/calculator` repo. **This repo is public and GitHub Pages serves `main`, so any push to `main` changes the live tool.** Don't commit secrets here.
 
 | File | What it is |
 |---|---|
@@ -223,26 +225,28 @@ The result page includes a disclaimer written with New Jersey in mind:
 
 ## Status & next steps
 
-### Where things stand (Sep 26, 2026)
+### Where things stand (Sep 28, 2026)
 | Item | Status |
 |---|---|
-| Tool (`index.html`) | Built and tested: 5 steps, condition and rust, net trade-in cost, ~500 models, print/PDF, send form with bot trap and email/US phone checks |
-| This repo | Public, `main` branch |
-| GitHub Pages hosting | Turned on; first deploy succeeded (1:15 PM ET). The address returned **404** when first checked; see `TROUBLESHOOTING.md`. |
-| Squarespace test page | `besafetravels.com/fix-or-trade` made with an **older** paste-in snippet. It "kinda worked" and the page is **disabled**. Now troubleshooting `embed.html` with Claude in Chrome (`TROUBLESHOOTING.md`). |
-| Where leads go | **Decided: Google Sheet via Apps Script.** `apps-script/Code.gs` is written and tested. Waiting on you to deploy it and send the `/exec` URL (section 3). Until then, FormSubmit is still set (not activated). |
+| Tool (`index.html`) | Built and tested: 5 steps, condition and rust, net trade-in cost, ~500 models, print/PDF, send form with bot trap and email/US phone checks, embedded mode (Sep 27) |
+| This repo | Public, `main` branch, served by GitHub Pages |
+| Squarespace page | `besafetravels.com/fix-or-trade` is **live, not linked, no password**. Tip: turn on page ⚙️ → SEO → **Hide page from search results** until launch |
+| Page layout | The tool's height changes by step (~600–3,000px), and the fixed-height section let the footer overlap. Claude in Chrome tested a section-scoped Custom CSS fix; **whether it was saved is unconfirmed** |
+| Squarespace plan | The editor warns that JavaScript and **iframe embeds** are a Premium Feature on the current Basic plan. The page works today; confirm the plan before re-saving the embed |
+| Where leads go | **Still FormSubmit** (activation not confirmed, so leads may not arrive). `apps-script/Code.gs` is written and tested; deploying it is next step 1 below |
+| Known fixes to make | Form fields use 15px text, so iPhones zoom in on tap (change to 16px). The Year field rejects anything above 2027 (`year>2027`, `max="2027"`), which blocks 2028 models once they're sold; use the current year + 1 |
 | Disclaimer | Drafted; **needs attorney review** |
 
 ### Next steps, in order
-1. **Write down what "kinda worked" meant.** Note anything odd on the test page: layout, spacing, the frame's height, fonts, steps or sending. That tells Claude what to fix, and what's a Squarespace-side formatting change (see [the table in section 5](#what-you-can-and-cant-format-in-squarespace)).
-2. **Turn on GitHub Pages** (Settings → Pages → Deploy from a branch → `main` / root). Confirm https://casssuczeck.github.io/fix-or-trade/ loads.
-3. **Swap the test page to `embed.html`.** It replaces the old snippet, which is missing the bot trap and the email and phone checks. From then on, every update to the tool reaches the page automatically. If `embed.html` doesn't work in Squarespace, paste the current `squarespace-snippet.html` instead.
-4. **Formatting pass.** Adjust the section around the tool in Squarespace. Send Claude any in-tool changes, such as hiding the duplicate heading or using a transparent background.
-5. **Deploy the lead sheet script** (section 3, steps 1–6) and send Claude the `/exec` URL. Claude switches the tool over. Then send a test lead from the live page and confirm the row and email arrive.
-6. **Attorney review** of the disclaimer and privacy wording (section 6). Add the form service to your privacy and AI usage policies.
+1. **Deploy the lead sheet script** (section 3, steps 1–6): a **new, separate** Apps Script project, set `SHEET_ID`, run `setup()` and approve permissions, deploy as a Web app, and send Claude the `/exec` URL. Claude switches `submitEndpoint` and pushes. Then send a test lead from the live page and confirm the Sheet row and email.
+2. **Hide the page from search** until launch (Squarespace page ⚙️ → SEO).
+3. **Small fixes** (Claude, after Feather's OK, live on push): 16px form fields; year limit follows the current year.
+4. **Confirm the layout CSS** is saved, and the footer stays clear at every step on desktop and phone.
+5. **Resolve the Squarespace plan question** before re-saving the embed.
+6. **Attorney review** of the disclaimer and privacy wording (section 6).
 7. **Spot-check values** for the 5–10 cars your customers drive most, against KBB or Edmunds trade-in values.
-8. **Run the live-page tests** (section 5 checklist) on a phone and a desktop, in a private window.
-9. **Go live.** Enable the page, add it to the menu, and link it from `/calculator`, Google Business Profile, social posts and QR codes.
+8. **Run the live-page tests** (section 5 and section 7 checklists) on a phone, a foldable if available, and a desktop, in a private window.
+9. **Go live.** Add it to the menu, turn search visibility back on, and link it from `/calculator`, Google Business Profile, social posts and QR codes.
 10. **After launch.** Check that leads arrive weekly for the first month. Refresh the reference values once a year (section 2).
 
 Optional: set up `tools.besafetravels.com` (section 4) so the tool's address matches the site.
