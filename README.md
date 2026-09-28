@@ -116,6 +116,8 @@ When the customer presses **Send my results to Safe Travels**, the tool sends th
 
 After changing `Code.gs`, go to **Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy**. That keeps the same `/exec` URL. A brand-new deployment gets a new URL, which would then have to go into `index.html` too.
 
+**Tidy the tab:** run **formatSheet** once from the editor: navy frozen header, filters, readable dates, one compact line per lead. Safe to re-run.
+
 **Sheet columns:** Timestamp · Name · Email · Phone · Verdict · Consent · Answers & result
 
 ### What the server script checks
@@ -233,12 +235,12 @@ The result page includes a disclaimer written with New Jersey in mind:
 | Squarespace page | `besafetravels.com/fix-or-trade` is **live, not linked, no password**. Tip: turn on page ⚙️ → SEO → **Hide page from search results** until launch |
 | Page layout | The tool's height changes by step (~600–3,000px), and the fixed-height section let the footer overlap. Claude in Chrome tested a section-scoped Custom CSS fix; **whether it was saved is unconfirmed** |
 | Squarespace plan | The editor warns that JavaScript and **iframe embeds** are a Premium Feature on the current Basic plan. The page works today; confirm the plan before re-saving the embed |
-| Where leads go | **Google Sheet** tab *Safe Travels — Fix it, or trade it in? Leads* in the "Safe Travels — Calculator Leads" spreadsheet, plus an email to info@, via the Apps Script project *Fix or Trade leads* (owned by info@, deployed Sep 28). **Live test lead still to confirm** |
+| Where leads go | **Google Sheet** tab *Safe Travels — Fix it, or trade it in? Leads* in the "Safe Travels — Calculator Leads" spreadsheet, plus an email to info@, via the Apps Script project *Fix or Trade leads* (owned by info@, deployed Sep 28). Live test **TEST FT1 passed** Sep 28 |
 | Small fixes | ✅ Sep 28: form fields are 16px (no iPhone zoom); the Year limit is now the current year + 1 instead of a fixed 2027 |
 | Disclaimer | Drafted; **needs attorney review** |
 
 ### Next steps, in order
-1. **Confirm a live test lead:** send one from besafetravels.com/fix-or-trade and check the Sheet row and the info@ email, then delete the row. (The script was deployed and connected on Sep 28.)
+1. ~~Confirm a live test lead~~ ✅ TEST FT1 passed Sep 28. Next: paste the updated `Code.gs` and run **formatSheet** once to tidy the leads tab (calculator repo `DEPLOY.md` part B).
 2. **Hide the page from search** until launch (Squarespace page ⚙️ → SEO).
 3. ~~Small fixes~~ ✅ done Sep 28 (16px fields, year limit).
 4. **Confirm the layout CSS** is saved, and the footer stays clear at every step on desktop and phone.

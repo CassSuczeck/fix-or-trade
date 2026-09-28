@@ -98,10 +98,33 @@ function sheet_() {
   if (!sh) {
     sh = ss.insertSheet(SHEET_NAME);
     sh.appendRow(HEADERS);
-    sh.setFrozenRows(1);
-    sh.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
+    formatSheet_(sh);
   }
   return sh;
+}
+
+// Run once from the editor (select formatSheet → Run) to tidy up the leads tab. Safe to re-run.
+function formatSheet() {
+  formatSheet_(sheet_());
+}
+
+// Header row in the brand navy, frozen, with filters; dates readable; long answers clipped to
+// one line per lead (click a cell to read it all, or read the notification email).
+function formatSheet_(sh) {
+  var cols = HEADERS.length;
+  var rows = sh.getMaxRows();
+  var widths = [150, 160, 220, 130, 100, 80, 480];
+  for (var c = 1; c <= cols; c++) sh.setColumnWidth(c, widths[c - 1]);
+  sh.setFrozenRows(1);
+  sh.getRange(1, 1, 1, cols)
+    .setFontWeight('bold').setFontColor('#ffffff').setBackground('#0B1442')
+    .setVerticalAlignment('middle').setWrap(true);
+  sh.getRange(2, 1, rows - 1, 1).setNumberFormat('ddd mmm d, yyyy h:mm am/pm');
+  sh.getRange(2, 1, rows - 1, cols).setVerticalAlignment('top');
+  sh.getRange(2, cols, rows - 1, 1).setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
+  sh.setRowHeightsForced(2, rows - 1, 24); // line breaks in the answers would otherwise make rows very tall
+  sh.getRange(2, 5, rows - 1, 2).setHorizontalAlignment('center');
+  if (!sh.getFilter()) sh.getRange(1, 1, rows, cols).createFilter();
 }
 
 function notify_(lead) {
