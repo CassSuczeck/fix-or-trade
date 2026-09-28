@@ -214,7 +214,7 @@
     background: var(--bg-soft);
     color: var(--text-body);
     font-family:'Inter',sans-serif;
-    font-size:15px;
+    font-size:16px; /* 16px+ stops iOS Safari zooming in on focus */
     font-weight:500;
   }
   input:focus, select:focus, button:focus-visible{
@@ -490,7 +490,7 @@
     background: var(--white);
     color: var(--text-body);
     font-family:'Inter',sans-serif;
-    font-size:15px;
+    font-size:16px; /* 16px+ stops iOS Safari zooming in on focus */
   }
   .send-box textarea{ min-height:70px; resize:vertical; }
   .send-box .checkrow{ background: var(--white); align-items:flex-start; }
@@ -882,11 +882,12 @@
     leadEmail: 'info@besafetravels.com',
     // Where "Send my results" submissions go:
     //  - Google Apps Script web app (apps-script/Code.gs): paste its https://script.google.com/macros/s/…/exec URL.
-    //    Leads land in the "Fix or Trade Leads" tab of the Google Sheet, and info@ gets an email.
-    //  - FormSubmit (current, until the Apps Script URL is in): emails leadEmail; the first
-    //    submission sends an activation email to leadEmail.
+    //    Leads land in the "Safe Travels — Fix it, or trade it in? Leads" tab of the Google Sheet, and info@ gets an email.
+    //    Current setting: the "Fix or Trade leads" project under info@ (deployed 2026-09-28).
+    //  - FormSubmit (https://formsubmit.co/ajax/info@besafetravels.com): emails leadEmail; the first
+    //    submission sends an activation email to leadEmail. Previous setting.
     //  - '' sends nothing and opens the customer's email app instead.
-    submitEndpoint: 'https://formsubmit.co/ajax/info@besafetravels.com'
+    submitEndpoint: 'https://script.google.com/macros/s/AKfycbz4BrQwaSMZvIZAOqmyDakPnyBGx8i_okZtAsB-3XBSUq9jP9hJqQw0kU8BteDcKVif/exec'
   };
 
   // ---- Reference data ----
@@ -1081,11 +1082,15 @@
     if(heading) heading.focus({preventScroll:true});
   }
 
+  // Newest accepted model year: next year's models go on sale during the current year.
+  var MAX_YEAR = new Date().getFullYear() + 1;
+  $('year').max = MAX_YEAR;
+
   $('next0').addEventListener('click', function(){
     var year = parseInt($('year').value,10);
     var mileage = parseInt($('mileage').value,10);
     var err = $('err0');
-    var badYear = !year || year<1990 || year>2027, badMiles = isNaN(mileage) || mileage<0;
+    var badYear = !year || year<1990 || year>MAX_YEAR, badMiles = isNaN(mileage) || mileage<0;
     $('year').setAttribute('aria-invalid', badYear ? 'true' : 'false');
     $('mileage').setAttribute('aria-invalid', badMiles ? 'true' : 'false');
     if(badYear || badMiles){

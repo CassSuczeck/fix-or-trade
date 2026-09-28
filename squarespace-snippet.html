@@ -217,7 +217,7 @@
     background: var(--bg-soft);
     color: var(--text-body);
     font-family:&#x27;Inter&#x27;,sans-serif;
-    font-size:15px;
+    font-size:16px; /* 16px+ stops iOS Safari zooming in on focus */
     font-weight:500;
   }
   input:focus, select:focus, button:focus-visible{
@@ -493,7 +493,7 @@
     background: var(--white);
     color: var(--text-body);
     font-family:&#x27;Inter&#x27;,sans-serif;
-    font-size:15px;
+    font-size:16px; /* 16px+ stops iOS Safari zooming in on focus */
   }
   .send-box textarea{ min-height:70px; resize:vertical; }
   .send-box .checkrow{ background: var(--white); align-items:flex-start; }
@@ -885,11 +885,12 @@
     leadEmail: &#x27;info@besafetravels.com&#x27;,
     // Where &quot;Send my results&quot; submissions go:
     //  - Google Apps Script web app (apps-script/Code.gs): paste its https://script.google.com/macros/s/&#8230;/exec URL.
-    //    Leads land in the &quot;Fix or Trade Leads&quot; tab of the Google Sheet, and info@ gets an email.
-    //  - FormSubmit (current, until the Apps Script URL is in): emails leadEmail; the first
-    //    submission sends an activation email to leadEmail.
+    //    Leads land in the &quot;Safe Travels &#8212; Fix it, or trade it in? Leads&quot; tab of the Google Sheet, and info@ gets an email.
+    //    Current setting: the &quot;Fix or Trade leads&quot; project under info@ (deployed 2026-09-28).
+    //  - FormSubmit (https://formsubmit.co/ajax/info@besafetravels.com): emails leadEmail; the first
+    //    submission sends an activation email to leadEmail. Previous setting.
     //  - &#x27;&#x27; sends nothing and opens the customer&#x27;s email app instead.
-    submitEndpoint: &#x27;https://formsubmit.co/ajax/info@besafetravels.com&#x27;
+    submitEndpoint: &#x27;https://script.google.com/macros/s/AKfycbz4BrQwaSMZvIZAOqmyDakPnyBGx8i_okZtAsB-3XBSUq9jP9hJqQw0kU8BteDcKVif/exec&#x27;
   };
 
   // ---- Reference data ----
@@ -1084,11 +1085,15 @@
     if(heading) heading.focus({preventScroll:true});
   }
 
+  // Newest accepted model year: next year&#x27;s models go on sale during the current year.
+  var MAX_YEAR = new Date().getFullYear() + 1;
+  $(&#x27;year&#x27;).max = MAX_YEAR;
+
   $(&#x27;next0&#x27;).addEventListener(&#x27;click&#x27;, function(){
     var year = parseInt($(&#x27;year&#x27;).value,10);
     var mileage = parseInt($(&#x27;mileage&#x27;).value,10);
     var err = $(&#x27;err0&#x27;);
-    var badYear = !year || year&lt;1990 || year&gt;2027, badMiles = isNaN(mileage) || mileage&lt;0;
+    var badYear = !year || year&lt;1990 || year&gt;MAX_YEAR, badMiles = isNaN(mileage) || mileage&lt;0;
     $(&#x27;year&#x27;).setAttribute(&#x27;aria-invalid&#x27;, badYear ? &#x27;true&#x27; : &#x27;false&#x27;);
     $(&#x27;mileage&#x27;).setAttribute(&#x27;aria-invalid&#x27;, badMiles ? &#x27;true&#x27; : &#x27;false&#x27;);
     if(badYear || badMiles){

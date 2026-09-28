@@ -2,7 +2,7 @@
  * Safe Travels "Fix it, or trade it in?" — lead capture web app.
  *
  * Receives "Send my results" submissions from the tool (index.html), adds a row to the
- * "Fix or Trade Leads" tab, and emails info@besafetravels.com a notification.
+ * "Safe Travels — Fix it, or trade it in? Leads" tab, and emails info@besafetravels.com a notification.
  *
  * Setup (details in README section 3):
  *   1. script.google.com → New project (keep it SEPARATE from the calculator's script:
@@ -18,7 +18,7 @@
 // (the long part of docs.google.com/spreadsheets/d/<THIS PART>/edit). Keep the quotes.
 // Can be the calculator's lead sheet.
 var SHEET_ID = 'PASTE_SPREADSHEET_ID_HERE';
-var SHEET_NAME = 'Fix or Trade Leads';
+var SHEET_NAME = 'Safe Travels — Fix it, or trade it in? Leads'; // must match the tab name exactly (em dash)
 var NOTIFY_EMAIL = 'info@besafetravels.com'; // '' to turn off notification emails
 var MAX_PER_10_MIN = 30; // flood guard: submissions accepted per 10 minutes, across everyone
 

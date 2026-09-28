@@ -2,7 +2,7 @@
 
 A free, 5-step web tool that helps a car owner decide whether to repair their current car or trade it in. It's built as one self-contained web page for Safe Travels Mobile Repair (Middletown / Port Monmouth, NJ).
 
-**Status (Sep 28, 2026):** **live** at **besafetravels.com/fix-or-trade**, not linked from the menu, no password. Leads still go through FormSubmit; the Google Sheet script is written but not deployed. See [Status & next steps](#status--next-steps).
+**Status (Sep 28, 2026):** **live** at **besafetravels.com/fix-or-trade**, not linked from the menu, no password. Leads go to the Google Sheet via Apps Script (switched Sep 28). See [Status & next steps](#status--next-steps).
 
 **Project management:** this tool and the `/calculator` are handled from **one** Claude Code chat, which works in both repos. The shared status file is `PROJECT-STATUS.md` → "Goal 2" in the private `CassSuczeck/calculator` repo. **This repo is public and GitHub Pages serves `main`, so any push to `main` changes the live tool.** Don't commit secrets here.
 
@@ -99,8 +99,8 @@ When the customer presses **Send my results to Safe Travels**, the tool sends th
 
 | `submitEndpoint` | Where leads go | Status |
 |---|---|---|
-| `https://script.google.com/macros/s/…/exec` | **Google Sheet** ("Fix or Trade Leads" tab) plus a notification email to info@, via `apps-script/Code.gs` | **Recommended.** Code is ready; waiting for deployment. |
-| `https://formsubmit.co/ajax/info@besafetravels.com` | Email to info@ via FormSubmit (outside service) | Current setting. Needs one-time activation. |
+| `https://script.google.com/macros/s/…/exec` | **Google Sheet** ("Safe Travels — Fix it, or trade it in? Leads" tab) plus a notification email to info@, via `apps-script/Code.gs` | **Current setting** (since Sep 28): project *Fix or Trade leads* under info@. |
+| `https://formsubmit.co/ajax/info@besafetravels.com` | Email to info@ via FormSubmit (outside service) | Previous setting. Needs one-time activation. |
 | `''` | Nothing is sent; the customer's email app opens with the results filled in | Fallback |
 
 ### Setting up the Google Sheet route (about 10 minutes)
@@ -108,7 +108,7 @@ When the customer presses **Send my results to Safe Travels**, the tool sends th
 2. **Create a new, separate Apps Script project** at https://script.google.com → **New project**, and name it *Fix or Trade leads*.
    - **Don't paste this into the calculator's script.** Two `doPost` functions in one project collide and could break calculator leads.
 3. **Paste the script.** Replace the editor's contents with `apps-script/Code.gs` from this repo, set `SHEET_ID` at the top, and save.
-4. **Run setup once.** Choose **setup** in the function menu, click **Run**, and approve the permissions it asks for (Sheets, email, cache). This creates the *Fix or Trade Leads* tab with its headers.
+4. **Run setup once.** Choose **setup** in the function menu, click **Run**, and approve the permissions it asks for (Sheets, email, cache). This creates the *Safe Travels — Fix it, or trade it in? Leads* tab with its headers.
 5. **Deploy it.** Click **Deploy → New deployment → ⚙ → Web app**. Set *Execute as* to **Me** and *Who has access* to **Anyone**, then click **Deploy** and copy the **Web app URL** (it ends in `/exec`).
 6. **Check it's running.** Open that URL in a browser. It should show `{"ok":true,"service":"fix-or-trade leads"}`.
 7. **Connect the tool.** Set `submitEndpoint` in `index.html` to that URL and push to `main`, or send the URL to Claude to do it. The live page updates within about 2 minutes.
@@ -233,14 +233,14 @@ The result page includes a disclaimer written with New Jersey in mind:
 | Squarespace page | `besafetravels.com/fix-or-trade` is **live, not linked, no password**. Tip: turn on page ⚙️ → SEO → **Hide page from search results** until launch |
 | Page layout | The tool's height changes by step (~600–3,000px), and the fixed-height section let the footer overlap. Claude in Chrome tested a section-scoped Custom CSS fix; **whether it was saved is unconfirmed** |
 | Squarespace plan | The editor warns that JavaScript and **iframe embeds** are a Premium Feature on the current Basic plan. The page works today; confirm the plan before re-saving the embed |
-| Where leads go | **Still FormSubmit** (activation not confirmed, so leads may not arrive). `apps-script/Code.gs` is written and tested; deploying it is next step 1 below |
-| Known fixes to make | Form fields use 15px text, so iPhones zoom in on tap (change to 16px). The Year field rejects anything above 2027 (`year>2027`, `max="2027"`), which blocks 2028 models once they're sold; use the current year + 1 |
+| Where leads go | **Google Sheet** tab *Safe Travels — Fix it, or trade it in? Leads* in the "Safe Travels — Calculator Leads" spreadsheet, plus an email to info@, via the Apps Script project *Fix or Trade leads* (owned by info@, deployed Sep 28). **Live test lead still to confirm** |
+| Small fixes | ✅ Sep 28: form fields are 16px (no iPhone zoom); the Year limit is now the current year + 1 instead of a fixed 2027 |
 | Disclaimer | Drafted; **needs attorney review** |
 
 ### Next steps, in order
-1. **Deploy the lead sheet script** (section 3, steps 1–6): a **new, separate** Apps Script project, set `SHEET_ID`, run `setup()` and approve permissions, deploy as a Web app, and send Claude the `/exec` URL. Claude switches `submitEndpoint` and pushes. Then send a test lead from the live page and confirm the Sheet row and email.
+1. **Confirm a live test lead:** send one from besafetravels.com/fix-or-trade and check the Sheet row and the info@ email, then delete the row. (The script was deployed and connected on Sep 28.)
 2. **Hide the page from search** until launch (Squarespace page ⚙️ → SEO).
-3. **Small fixes** (Claude, after Feather's OK, live on push): 16px form fields; year limit follows the current year.
+3. ~~Small fixes~~ ✅ done Sep 28 (16px fields, year limit).
 4. **Confirm the layout CSS** is saved, and the footer stays clear at every step on desktop and phone.
 5. **Resolve the Squarespace plan question** before re-saving the embed.
 6. **Attorney review** of the disclaimer and privacy wording (section 6).
