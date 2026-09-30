@@ -11,7 +11,8 @@ A free, 5-step web tool that helps a car owner decide whether to repair their cu
 | `index.html` | The whole tool: page, styles, reference data and logic. No build step. |
 | `squarespace-snippet.html` | The whole tool as one paste-in Squarespace Embed Block. Generated; don't edit by hand. |
 | `build-squarespace-snippet.py` | Rebuilds `squarespace-snippet.html` from `index.html`. |
-| `embed.html` | Short embed for when the tool is hosted on GitHub Pages. |
+| `embed.html` | Short embed for when the tool is hosted on GitHub Pages. **This is what's live.** |
+| `squarespace-custom-css.css` | Site Custom CSS that lets the tool's section grow with the tool, so it never runs over the footer. |
 | `apps-script/Code.gs` | Google Apps Script web app that saves leads to the Google Sheet and emails info@. |
 | `README.md` | This document. |
 | `TROUBLESHOOTING.md` | Checklist and findings log for the Squarespace embed. |
@@ -198,6 +199,16 @@ Tip: put the tool in a full-width section with no padding and let the tool suppl
 
 ### Option 2: hosted + small embed (once GitHub Pages is on)
 Host the tool (section 4), then paste the much shorter `embed.html` instead. Future changes go live by pushing to GitHub, with no re-pasting in Squarespace. If you set up a custom domain, change the iframe `src` and `TOOL_ORIGIN` in `embed.html` to match it.
+
+### Stop the tool running over the footer (Custom CSS)
+Squarespace's section layout has a fixed height, but the tool's frame grows from about 600px (step 1) to about 3,400px (results on a phone), so it spills over the footer. The fix lives in the site's Custom CSS, not in the embed block, so the embed doesn't need re-saving.
+1. In Squarespace, open **Website → Pages → Custom Code → Custom CSS** (older menus: **Design → Custom CSS**).
+2. Copy everything currently in the box into a private note as a backup.
+3. If an earlier fix from Claude in Chrome is there (it mentions `data-section-id="6ab7f5440d39d4ca86936051"`), delete that part.
+4. Paste the whole of `squarespace-custom-css.css` at the end, then click **Save**. If Squarespace shows an error, paste it to Claude.
+5. Check https://www.besafetravels.com/fix-or-trade in an incognito window, on a desktop and a phone: at every step the footer sits just below the tool and its links work.
+
+It only affects the section that contains the tool, and it has no section IDs, so it keeps working if that section is rebuilt. If an empty gap shows above the tool, delete any empty text block in that section in the page editor.
 
 ### Test checklist on the live page
 - [ ] The tool shows full-width with no scrollbar inside it, on a phone and a desktop.

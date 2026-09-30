@@ -7,7 +7,7 @@ A guide to getting `embed.html` working on the Squarespace page. You can also pa
 |---|---|
 | Tool source | Public repo `CassSuczeck/fix-or-trade`, branch `main` |
 | Hosted tool | GitHub Pages: https://casssuczeck.github.io/fix-or-trade/ |
-| Squarespace page | `besafetravels.com/fix-or-trade`, **disabled** (not live) |
+| Squarespace page | `besafetravels.com/fix-or-trade`, **live, not linked** (Sep 28) |
 | Embed code | `embed.html`, pasted into a block on that page |
 | Backup | `squarespace-snippet.html`: the whole tool in one paste, no hosting needed. It must be re-pasted after every change. |
 
@@ -49,3 +49,4 @@ A guide to getting `embed.html` working on the Squarespace page. You can also pa
 | Sep 26, 2026 | Turned on GitHub Pages; first deploy succeeded at 1:15 PM ET | Hosted address gave **404** in Vivaldi (with VPN) and Chrome (logged in) | Re-check after 10 min; verify the Settings → Pages folder is `/ (root)` |
 | Sep 26, 2026 | Started troubleshooting `embed.html` in Squarespace with Claude in Chrome | In progress | Add results here |
 | Sep 28, 2026 | Wrote `apps-script/Code.gs` (Google Sheet + email) and the tool's Apps Script send path | Tested with Google simulated: plain POST with no preflight; success, rejection and outage each show the right message; server checks pass | Deploy the script, put the `/exec` URL in `index.html`, then test from the live page |
+| Sep 28–30, 2026 | Live page runs `embed.html` (confirmed: TEST FT1/FT2 reached the Apps Script, which only the hosted tool uses). Footer overlap: Fluid Engine section keeps a fixed height while the iframe resizes | Chrome's section-ID CSS tested in the browser but not confirmed saved; overlap still seen Sep 28 | Sep 30: `squarespace-custom-css.css` (uses `:has(#st-fix-or-trade)`, no IDs). Tested on a mock of the Fluid Engine markup at 1280px and 390px: footer 48px below the tool at every step (without it: up to 2,419px overlap). Next: paste into Custom CSS and check live |

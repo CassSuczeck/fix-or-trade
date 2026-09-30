@@ -1,0 +1,35 @@
+/* Safe Travels "Fix it, or trade it in?" — Squarespace Custom CSS
+   Paste into Squarespace: Website → Pages → Custom Code → Custom CSS (older menus: Design → Custom CSS).
+   Why: Squarespace's Fluid Engine gives each section a fixed-height grid. The tool's iframe grows and
+   shrinks with each step (about 600–3,400px), so without this it spills over the footer.
+   What it does, only in the section that contains the tool (#st-fix-or-trade, from embed.html):
+   stack the section's blocks top to bottom and let the section grow with the tool.
+   No section or block IDs, so it keeps working if the section is rebuilt or duplicated.
+   Needs :has(), supported by current Chrome, Edge, Safari (15.4+) and Firefox (121+). */
+
+section:has(#st-fix-or-trade) .fluid-engine {
+  display: flex !important;
+  flex-direction: column;
+  row-gap: 24px;
+  height: auto !important;
+  padding: 0 var(--sqs-site-gutter, 4vw) 48px;
+}
+@media (max-width: 767px) {
+  section:has(#st-fix-or-trade) .fluid-engine {
+    padding: 0 var(--sqs-mobile-site-gutter, 6vw) 48px;
+  }
+}
+section:has(#st-fix-or-trade) .fluid-engine > .fe-block {
+  grid-area: auto !important;
+  width: 100%;
+}
+/* Embed Blocks keep a fixed aspect ratio and position their content absolutely; undo that. */
+.embed-block-wrapper:has(#st-fix-or-trade) {
+  padding-bottom: 0 !important;
+  height: auto !important;
+}
+.embed-block-wrapper:has(#st-fix-or-trade) > div,
+#st-fix-or-trade,
+#st-fix-or-trade iframe {
+  position: static !important;
+}
