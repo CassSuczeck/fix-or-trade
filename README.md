@@ -12,6 +12,7 @@ A free, 5-step web tool that helps a car owner decide whether to repair their cu
 | `squarespace-snippet.html` | The whole tool as one paste-in Squarespace Embed Block. Generated; don't edit by hand. |
 | `build-squarespace-snippet.py` | Rebuilds `squarespace-snippet.html` from `index.html`. |
 | `embed.html` | Short embed for when the tool is hosted on GitHub Pages. **This is what's live.** |
+| `MODEL-YEARS.md` | Review list of the US model years for every car in the tool (generated from `MODEL_YEARS` in `index.html`). |
 | `squarespace-custom-css.css` | Site Custom CSS that lets the tool's section grow with the tool, so it never runs over the footer. |
 | `apps-script/Code.gs` | Google Apps Script web app that saves leads to the Google Sheet and emails info@. |
 | `README.md` | This document. |

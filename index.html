@@ -1035,6 +1035,80 @@
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
   function $(id){ return document.getElementById(id); }
 
+  // ---- Model years sold in the US ----
+  // "from-to" ranges; "now" means still sold. Gaps are separate ranges ("1990-2011|2019-now").
+  // Used to offer only real year + make + model combinations, so we never price a car that
+  // didn't exist (e.g. a 1999 Dodge Hornet). Review list: MODEL-YEARS.md. Update when models
+  // launch or end. A model missing here is always offered (fail open).
+  var MODEL_YEARS = {
+    "Acura": "ILX:2013-2022,Integra:1990-2001|2023-now,TLX:2015-now,TL:1996-2014,TSX:2004-2014,RLX:2014-2020,RL:1996-2012,RSX:2002-2006,RDX:2007-now,MDX:2001-now,ZDX:2010-2013|2024-now,NSX:1991-2005|2017-2022",
+    "Alfa Romeo": "Giulia:2017-now,Stelvio:2018-now,Tonale:2024-now,4C:2015-2020",
+    "Aston Martin": "Vantage:2006-now,DB11:2017-2023,DB12:2024-now,DBS:2008-2012|2019-2024,DBX:2021-now",
+    "Audi": "A3:2006-2013|2015-now,A4:1996-now,A5:2008-now,A6:1995-now,A7:2012-now,A8:1997-now,S3:2015-now,S4:2000-now,S5:2008-now,RS 5:2013-2015|2018-2025,RS 7:2014-2018|2020-now,TT:2000-2006|2008-2023,R8:2008-2023,Q3:2015-now,Q4 e-tron:2022-now,Q5:2009-now,Q7:2007-2015|2017-now,Q8:2019-now,e-tron / Q8 e-tron:2019-2024,e-tron GT:2022-now,A6 allroad:2001-2005|2020-now",
+    "Bentley": "Continental GT:2004-now,Flying Spur:2006-now,Bentayga:2017-now",
+    "BMW": "2 Series:2014-now,3 Series:1990-now,4 Series:2014-now,5 Series:1990-now,7 Series:1990-now,8 Series:1991-1997|2019-now,M2:2016-now,M3:1995-now,M4:2015-now,M5:2000-now,Z4:2003-2016|2019-now,X1:2013-now,X2:2018-now,X3:2004-now,X4:2015-now,X5:2000-now,X6:2008-now,X7:2019-now,XM:2023-now,i3:2014-2021,i4:2022-now,i5:2024-now,i7:2023-now,iX:2022-now",
+    "Buick": "Encore:2013-2022,Encore GX:2020-now,Envista:2024-now,Envision:2016-now,Enclave:2008-now,Regal:1990-2004|2011-2020,LaCrosse:2005-2019,Verano:2012-2017,Lucerne:2006-2011,LeSabre:1990-2005",
+    "Cadillac": "ATS:2013-2019,CT4:2020-now,CTS:2003-2019,CT5:2020-now,CT6:2016-2020,XTS:2013-2019,DTS:2006-2011,SRX:2004-2016,XT4:2019-now,XT5:2017-now,XT6:2020-2025,Escalade:1999-now,Lyriq:2023-now,Optiq:2025-now",
+    "Chevrolet": "Spark:2013-2022,Sonic:2012-2020,Aveo:2004-2011,Cruze:2011-2019,Cobalt:2005-2010,Volt:2011-2019,Bolt EV:2017-2023|2027-now,Bolt EUV:2022-2023,Malibu:1997-2025,Impala:1994-1996|2000-2020,Camaro:1990-2002|2010-2024,Corvette:1990-now,Trax:2015-now,Trailblazer:2002-2009|2021-now,Equinox:2005-now,Equinox EV:2024-now,Blazer:1990-2005|2019-now,Blazer EV:2024-now,Traverse:2009-now,Tahoe:1995-now,Suburban:1990-now,Colorado:2004-2012|2015-now,Silverado 1500:1999-now,Silverado EV:2024-now,Silverado 2500HD / 3500HD:1999-now,Avalanche:2002-2013,Express:1996-now",
+    "Chrysler": "200:2011-2017,300:2005-2023,Sebring:1995-2010,PT Cruiser:2001-2010,Pacifica:2004-2008|2017-now,Voyager:2000-2003|2020-2025,Town & Country:1990-2016",
+    "Dodge": "Dart:2013-2016,Avenger:1995-2000|2008-2014,Charger:2006-now,Challenger:2008-2023,Viper:1992-2010|2013-2017,Journey:2009-2020,Hornet:2023-now,Durango:1998-2009|2011-now,Grand Caravan:1990-2020,Dakota:1990-2011",
+    "Ferrari": "Roma:2021-now,Portofino:2019-2023,F8:2020-2023,296:2022-now,812:2018-2024,SF90:2021-now,Purosangue:2023-now",
+    "Fiat": "500:2012-2019,500L:2014-2020,500X:2016-2023,500e:2013-2019|2024-now,124 Spider:2017-2020",
+    "Ford": "Fiesta:2011-2019,Focus:2000-2018,Fusion:2006-2020,Taurus:1990-2006|2008-2019,Crown Victoria:1992-2011,Mustang:1990-now,Mustang Mach-E:2021-now,EcoSport:2018-2022,Escape:2001-now,Bronco Sport:2021-now,Bronco:1990-1996|2021-now,Edge:2007-2024,Explorer:1991-now,Flex:2009-2019,Expedition:1997-now,Maverick:2022-now,Ranger:1990-2011|2019-now,F-150:1990-now,F-150 Lightning:2022-now,Super Duty (F-250 / F-350):1999-now,Transit:2015-now,Transit Connect:2010-2023,E-Series:1990-2014",
+    "Genesis": "G70:2019-now,G80:2017-now,G90:2017-now,GV60:2023-now,GV70:2022-now,GV80:2021-now",
+    "GMC": "Terrain:2010-now,Acadia:2007-now,Envoy:1998-2000|2002-2009,Yukon:1992-now,Yukon XL:2000-now,Canyon:2004-2012|2015-now,Sierra 1500:1999-now,Sierra HD:1999-now,Hummer EV:2022-now,Savana:1996-now",
+    "Honda": "Fit:2007-2020,Insight:2000-2006|2010-2014|2019-2022,Civic:1990-now,CR-Z:2011-2016,Accord:1990-now,Clarity:2017-2021,S2000:2000-2009,HR-V:2016-now,CR-V:1997-now,Element:2003-2011,Passport:1994-2002|2019-now,Pilot:2003-now,Prologue:2024-now,Odyssey:1995-now,Ridgeline:2006-2014|2017-now",
+    "Hyundai": "Accent:1995-2022,Elantra:1992-now,Veloster:2012-2022,Ioniq:2017-2022,Ioniq 5:2022-now,Ioniq 6:2023-now,Sonata:1990-now,Azera:2006-2017,Genesis sedan:2009-2016,Venue:2020-now,Kona:2018-now,Kona Electric:2019-now,Tucson:2005-now,Santa Fe:2001-now,Palisade:2020-now,Santa Cruz:2022-now",
+    "Infiniti": "G35 / G37:2003-2013,Q50:2014-2024,Q60:2014-2022,Q70:2014-2019,QX30:2017-2019,QX50:2014-now,QX55:2022-2025,QX60:2014-now,QX80:2014-now",
+    "Jaguar": "XE:2017-2020,XF:2009-2024,XJ:1990-2019,F-Type:2014-2024,E-Pace:2018-2024,F-Pace:2017-now,I-Pace:2019-2024",
+    "Jeep": "Renegade:2015-2023,Compass:2007-now,Patriot:2007-2017,Cherokee:1990-2001|2014-2023|2026-now,Liberty:2002-2012,Grand Cherokee:1993-now,Commander:2006-2010,Wrangler:1990-now,Gladiator:2020-now,Wagoneer:2022-now,Grand Wagoneer:1990-1991|2022-now",
+    "Kia": "Rio:2001-2023,Forte:2010-2024,Soul:2010-2025,Optima:2001-2020,K5:2021-now,Stinger:2018-2023,Cadenza:2014-2020,K900:2015-2020,Seltos:2021-now,Niro:2017-now,Sportage:1995-2002|2005-now,Sorento:2003-now,Telluride:2020-now,Sedona:2002-2012|2014-2021,Carnival:2022-now,EV6:2022-now,EV9:2024-now",
+    "Lamborghini": "Huracán:2015-2024,Urus:2019-now,Aventador:2012-2022,Revuelto:2024-now",
+    "Land Rover": "Range Rover:1990-now,Range Rover Sport:2006-now,Range Rover Velar:2018-now,Range Rover Evoque:2012-now,Discovery:1994-2004|2017-now,Discovery Sport:2015-now,Defender:1993-1997|2020-now,LR4:2010-2016",
+    "Lexus": "CT:2011-2017,IS:2001-now,RC:2015-2025,ES:1990-now,GS:1993-2020,LS:1990-now,LC:2018-now,UX:2019-now,NX:2015-now,RX:1999-now,GX:2003-now,TX:2024-now,LX:1996-now,RZ:2023-now",
+    "Lincoln": "MKZ:2007-2020,Continental:1990-2002|2017-2020,Town Car:1990-2011,MKC:2015-2019,Corsair:2020-now,MKX:2007-2018,Nautilus:2019-now,MKT:2010-2019,Aviator:2003-2005|2020-now,Navigator:1998-now",
+    "Lucid": "Air:2022-now,Gravity:2025-now",
+    "Maserati": "Ghibli:2014-2024,Quattroporte:2005-2024,Levante:2017-2024,Grecale:2023-now",
+    "Mazda": "Mazda3:2004-now,Mazda6:2003-2021,MX-5 Miata:1990-now,RX-8:2004-2011,CX-3:2016-2021,CX-30:2020-now,CX-5:2013-now,CX-50:2023-now,CX-7:2007-2012,CX-9:2007-2023,CX-70:2025-now,CX-90:2024-now,MX-30:2022-2023",
+    "McLaren": "570S:2016-2021,GT:2020-2023,720S:2018-2023,750S:2024-now,Artura:2023-now",
+    "Mercedes-Benz": "A-Class:2019-2022,CLA:2014-now,C-Class:1994-now,E-Class:1990-now,CLS:2006-2023,S-Class:1990-now,SL:1990-now,AMG GT:2016-now,GLA:2015-now,GLB:2020-now,GLK:2010-2015,GLC:2016-now,M-Class / ML:1998-2015,GLE:2016-now,GL:2007-2016,GLS:2017-now,G-Class:2002-now,EQB:2022-2025,EQE:2023-now,EQS:2022-now,Metris:2016-2023,Sprinter:2010-now",
+    "Mini": "Cooper (Hardtop):2002-now,Clubman:2008-2024,Countryman:2011-now",
+    "Mitsubishi": "Mirage:1990-2002|2014-2025,Lancer:2002-2017,Galant:1990-2012,Eclipse:1990-2012,Eclipse Cross:2018-now,Outlander Sport:2011-now,Outlander:2003-now,Outlander PHEV:2018-now",
+    "Nissan": "Versa:2007-now,Sentra:1990-now,Altima:1993-now,Maxima:1990-2023,Leaf:2011-now,Ariya:2023-now,350Z / 370Z:2003-2020,Z:2023-now,GT-R:2009-2024,Kicks:2018-now,Juke:2011-2017,Rogue Sport:2017-2022,Rogue:2008-now,Murano:2003-now,Pathfinder:1990-now,Xterra:2000-2015,Armada:2004-now,Quest:1993-2002|2004-2009|2011-2017,Frontier:1998-now,Titan:2004-2024,NV / NV200:2012-2021",
+    "Polestar": "Polestar 2:2021-now,Polestar 3:2025-now,Polestar 4:2025-now",
+    "Porsche": "911:1990-now,718 Boxster / Cayman:1997-now,Panamera:2010-now,Taycan:2020-now,Macan:2015-now,Cayenne:2003-now",
+    "Ram": "1500:1994-now,1500 Classic:2019-2024,2500 / 3500:1994-now,ProMaster:2014-now,ProMaster City:2015-2022",
+    "Rivian": "R1T:2022-now,R1S:2022-now,R2:2026-now",
+    "Rolls-Royce": "Ghost:2010-now,Wraith:2014-2023,Phantom:2004-now,Cullinan:2019-now,Spectre:2024-now",
+    "Subaru": "Impreza:1993-now,Legacy:1990-2025,WRX:2002-now,BRZ:2013-now,Crosstrek:2013-now,Forester:1998-now,Outback:1995-now,Tribeca:2006-2014,Ascent:2019-now,Solterra:2023-now",
+    "Tesla": "Model 3:2017-now,Model S:2012-now,Model X:2016-now,Model Y:2020-now,Cybertruck:2024-now",
+    "Toyota": "Yaris:2007-2020,Corolla:1990-now,Matrix:2003-2013,Prius:2001-now,Camry:1990-now,Avalon:1995-2022,Crown:2023-now,Mirai:2016-now,86 / GR86:2017-2020|2022-now,Supra:1990-1998|2020-now,C-HR:2018-2022,Corolla Cross:2022-now,RAV4:1996-now,Venza:2009-2015|2021-2024,bZ4X:2023-now,Highlander:2001-now,Grand Highlander:2024-now,4Runner:1990-now,FJ Cruiser:2007-2014,Sequoia:2001-now,Land Cruiser:1990-2021|2024-now,Sienna:1998-now,Tacoma:1995-now,Tundra:2000-now",
+    "VinFast": "VF 8:2023-now,VF 9:2024-now",
+    "Volkswagen": "Golf:1990-2021,GTI:1990-now,Golf R:2012-2013|2015-2019|2022-now,Jetta:1990-now,Beetle:1998-2019,Passat:1990-2022,CC:2009-2017,Arteon:2019-2023,Taos:2022-now,Tiguan:2009-now,Atlas:2018-now,Atlas Cross Sport:2020-now,Touareg:2004-2017,ID.4:2021-now,ID. Buzz:2025-now",
+    "Volvo": "S60:2001-now,V60:2015-now,S90:2017-2025,V90:2017-now,XC40:2019-now,XC60:2010-now,XC90:2003-now,C40 / EC40:2022-now,XC40 Recharge / EX40:2021-now,EX30:2025-now,EX90:2025-now"
+  };
+  function yearRanges(make, model){
+    var list = MODEL_YEARS[make];
+    if(!list) return null;
+    var hit = list.split(',').map(function(s){ var i = s.lastIndexOf(':'); return [s.slice(0,i), s.slice(i+1)]; })
+      .filter(function(p){ return p[0]===model; })[0];
+    return hit ? hit[1] : null;
+  }
+  function soldIn(make, model, year){
+    if(!year) return true;
+    var ranges = yearRanges(make, model);
+    if(!ranges) return true;
+    return ranges.split('|').some(function(r){
+      var a = r.split('-'), from = parseInt(a[0],10), to = a[1]==='now' ? 9999 : parseInt(a[1],10);
+      return year>=from && year<=to;
+    });
+  }
+  // The model year typed so far, or null while it's blank or not a sensible year yet.
+  function enteredYear(){
+    var y = parseInt($('year').value,10);
+    return (y>=1990 && y<=new Date().getFullYear()+1) ? y : null;
+  }
+
   // ---- populate make/model/category selects ----
   var makeSel = $('make');
   var modelSel = $('model');
@@ -1046,11 +1120,25 @@
     var o = document.createElement('option'); o.value=value; o.textContent=text; sel.appendChild(o);
   }
   var makes = Object.keys(BRANDS).sort(function(a,b){ return a.localeCompare(b); });
-  makes.forEach(function(m){ addOpt(makeSel, m, m); });
-  addOpt(makeSel, '__other__', 'Other / not listed');
+  function modelsFor(make, year){
+    return BRANDS[make].m.split(',').map(function(s){ return s.split(':')[0]; })
+      .filter(function(name){ return soldIn(make, name, year); })
+      .sort(function(a,b){ return a.localeCompare(b, undefined, {numeric:true}); });
+  }
+  // Only offer makes that sold at least one of our listed models in the entered year.
+  function refreshMakes(){
+    var year = enteredYear(), keep = makeSel.value;
+    makeSel.innerHTML = '';
+    makes.filter(function(m){ return modelsFor(m, year).length > 0; }).forEach(function(m){ addOpt(makeSel, m, m); });
+    addOpt(makeSel, '__other__', 'Other / not listed');
+    makeSel.value = keep;
+    if(makeSel.selectedIndex < 0) makeSel.selectedIndex = 0;
+  }
+  refreshMakes();
   Object.keys(SEGMENTS).forEach(function(k){ addOpt(categorySel, k, SEGMENTS[k].label); });
 
   function refreshModels(){
+    var keep = modelSel.value;
     modelSel.innerHTML='';
     if(makeSel.value === '__other__'){
       modelField.style.display='none';
@@ -1059,11 +1147,13 @@
     }
     modelField.style.display='block';
     categoryField.style.display='none';
-    BRANDS[makeSel.value].m.split(',').map(function(s){ return s.split(':')[0]; })
-      .sort(function(a,b){ return a.localeCompare(b, undefined, {numeric:true}); })
-      .forEach(function(name){ addOpt(modelSel, name, name); });
+    modelsFor(makeSel.value, enteredYear()).forEach(function(name){ addOpt(modelSel, name, name); });
+    modelSel.value = keep;
+    if(modelSel.selectedIndex < 0) modelSel.selectedIndex = 0;
   }
   makeSel.addEventListener('change', refreshModels);
+  // Typing or changing the year re-filters both lists to what was actually sold that year.
+  ['input','change'].forEach(function(ev){ $('year').addEventListener(ev, function(){ refreshMakes(); refreshModels(); }); });
   makeSel.value = makes[0];
   refreshModels();
 
@@ -1095,8 +1185,17 @@
     $('year').setAttribute('aria-invalid', badYear ? 'true' : 'false');
     $('mileage').setAttribute('aria-invalid', badMiles ? 'true' : 'false');
     if(badYear || badMiles){
+      err.textContent = 'Enter a model year and mileage to continue.';
       err.style.display='block';
       $(badYear ? 'year' : 'mileage').focus();
+      return;
+    }
+    // Never price a car that didn't exist (e.g. a 1999 Dodge Hornet).
+    if(makeSel.value !== '__other__' && !soldIn(makeSel.value, modelSel.value, year)){
+      err.textContent = 'We don\'t have a ' + year + ' ' + makeSel.value + ' ' + modelSel.value + ' on record in the US. Check the model year, or choose "Other / not listed" for a category estimate.';
+      err.style.display='block';
+      $('year').setAttribute('aria-invalid', 'true');
+      $('year').focus();
       return;
     }
     err.style.display='none';
@@ -1388,10 +1487,36 @@
       li.appendChild(k); li.appendChild(v); al.appendChild(li);
     });
 
+    // "How we calculated this": built from the same numbers as the result, so it always matches the math.
+    var mathTrade = isOther
+      ? 'We start from a typical trade-in value for a ' + SEGMENTS[seg].label.toLowerCase() + ' that is 8 years old (your model isn\'t in our list, so this is a category average)'
+      : 'We start from a typical trade-in value for a ' + makeSel.value + ' ' + modelSel.value + ' that is 8 years old';
+    mathTrade += ', then adjust it for your car\'s age, for its mileage compared with about 12,000 miles a year, and for the condition and rust you reported' +
+      (swIssues.length ? (swCounts ? ', plus the electronics problems (3% off for each)' : ' (the electronics problems don\'t lower it, since you said it\'s under warranty)') : '') +
+      '. The range shows how much cars like yours usually vary.';
+    var mathKeep = (repairCost>0 ? 'Your repair quote (' + money(repairCost) + ')' : 'No repair quote') +
+      ', plus about ' + money(maintMonthly) + ' a month in upkeep over ' + period + '. Upkeep starts at $70 a month, rises about $9 for each year of age past 2 (up to $230), and goes up for fair or poor condition, rust and out-of-warranty electronics problems.';
+    var mathReplace;
+    if(mode==='payment'){
+      mathReplace = 'Your ' + money(cashDown) + ' down, plus ' + money(monthlyPay) + ' a month for ' + coveredMonths + ' months' +
+        (tradeCredit>0 ? ', minus your trade-in\'s estimated value (' + money(tradeCredit) + '), which the dealer would credit to you.'
+                       : '. Your trade-in isn\'t subtracted, because you said it\'s already included in that payment.');
+    } else {
+      mathReplace = 'Your ' + money(cashDown) + ' down, plus the monthly payments on a loan for the price (' + money(price) + ') minus your down payment' +
+        (tradeCredit>0 ? ' and your trade-in (' + money(tradeCredit) + ')' : '') +
+        ', at ' + (apr||0) + '% APR over ' + termMonths + ' months (' + money(monthlyPay) + ' a month), for ' + coveredMonths + ' months of the comparison.' +
+        (tradeCredit>0 ? '' : ' Your trade-in isn\'t applied, because you left that option off.');
+    }
+    if(afterTermUpkeep>0) mathReplace += ' After the loan ends, we add about $40 a month for light upkeep on the newer car.';
+    mathReplace += ' Not included: sales tax, MVC title and registration fees, insurance, or what the newer car is still worth at the end.';
+    var mathVerdict = 'The verdict weighs the repair against your car\'s value (a repair over about 35% of the value leans toward trading in, over 60% strongly), which option costs less over ' + period +
+      ', your car\'s age and mileage, and the condition, rust and electronics problems you reported.' +
+      (repairCost>0 ? '' : ' With no repair on the table, it leans toward keeping the car.');
     $('mathBody').innerHTML =
-      '<p><strong>Trade-in estimate:</strong> starts from a reference value for that model (or its vehicle category) as an 8-year-old car, adjusted for age with a typical depreciation curve, for mileage compared with what\'s expected at that age, and for the condition, rust and electronics problems you reported.</p>' +
-      '<p><strong>Cost to keep &amp; fix:</strong> your repair quote, plus an estimated ' + money(maintMonthly) + '/month in upkeep for a car this age and condition, over the comparison period.</p>' +
-      '<p><strong>Net cost to trade in &amp; replace:</strong> cash down plus monthly payments over the comparison period (payments are entered directly, or calculated from price, APR and term), minus the estimated value of your trade-in. It does not include sales tax, MVC fees or insurance.</p>' +
+      '<p><strong>Trade-in estimate:</strong> ' + mathTrade + '</p>' +
+      '<p><strong>Cost to keep &amp; fix:</strong> ' + mathKeep + '</p>' +
+      '<p><strong>Net cost to trade in &amp; replace:</strong> ' + mathReplace + '</p>' +
+      '<p><strong>The verdict:</strong> ' + mathVerdict + '</p>' +
       '<p>Every real car differs by condition, region, and trim. Treat this as a starting point for the conversation, not a final number.</p>';
 
     $('printDate').textContent = 'Prepared ' + new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}) + ' at besafetravels.com';
