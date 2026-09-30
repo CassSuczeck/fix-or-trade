@@ -12,16 +12,20 @@ section:has(#st-fix-or-trade) .fluid-engine {
   flex-direction: column;
   row-gap: 24px;
   height: auto !important;
-  padding: 0 var(--sqs-site-gutter, 4vw) 48px;
+  padding: 0 var(--sqs-site-gutter, 4vw) 0;
 }
 @media (max-width: 767px) {
   section:has(#st-fix-or-trade) .fluid-engine {
-    padding: 0 var(--sqs-mobile-site-gutter, 6vw) 48px;
+    padding: 0 var(--sqs-mobile-site-gutter, 6vw) 0;
   }
 }
 section:has(#st-fix-or-trade) .fluid-engine > .fe-block {
   grid-area: auto !important;
   width: 100%;
+}
+/* Trim the section's own bottom padding (about 90px on desktop) so there's no big gap above the footer. */
+section:has(#st-fix-or-trade) .content-wrapper {
+  padding-bottom: 24px !important;
 }
 /* Embed Blocks keep a fixed aspect ratio and position their content absolutely; undo that. */
 .embed-block-wrapper:has(#st-fix-or-trade) {
