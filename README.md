@@ -236,6 +236,7 @@ The result page includes a disclaimer written with New Jersey in mind:
 - [ ] Send a test result and confirm the FormSubmit activation, then send another and confirm it arrives.
 - [ ] Turn off the network and press Send to confirm the email fallback link appears.
 - [ ] Check dark mode.
+- [ ] **Real-numbers check of price mode** against an outside loan calculator (logged Sep 30, 2026): [calculator.net auto loan](https://www.calculator.net/auto-loan-calculator.html?csaleprice=22000&cloanterm=60&cinterestrate=7.5&cincentive=0&cdownpayment=2000&ctradeinvalue=4000&ctradeinowned=0&cstate=NJ&csaletax=6.625&ctitlereg=500&printit=0&ctype=standard&x=Calculate#autoloanresult) with price $22,000, $2,000 down, $4,000 trade-in, 7.5% APR, 60 months. The tool leaves out tax and fees, so enter the same values (and a car whose trade-in is about $4,000). Expected: loan $16,000, **about $320.61 a month**. calculator.net adds NJ sales tax (6.625% on the price minus the trade-in = $1,192.50) and $500 title/registration, so its payment is about **$354.52**; the gap is those two items, which the tool's text says aren't included.
 
 ## Status & next steps
 

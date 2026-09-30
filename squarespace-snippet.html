@@ -6,6 +6,8 @@
 &lt;head&gt;
 &lt;meta charset=&quot;UTF-8&quot;&gt;
 &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+&lt;!-- Keep the tool out of search results until it launches (F1). Remove at launch. --&gt;
+&lt;meta name=&quot;robots&quot; content=&quot;noindex&quot;&gt;
 &lt;script&gt;
   // Inside an iframe (the Squarespace embed): hide our own header, use a transparent
   // background and the light theme, so the tool blends into the host page. Runs before
@@ -1291,6 +1293,12 @@
     $(&#x27;sendConsent&#x27;).checked=false;
     $(&#x27;sendStatus&#x27;).className=&#x27;send-status&#x27;;
     [&#x27;sendEmail&#x27;,&#x27;sendPhone&#x27;].forEach(function(id){ showFieldError(id, {ok:true}); });
+    // Put everything back the way a first visit sees it: the year was cleared, so the make and
+    // model lists must be rebuilt (they were still filtered by the old year), the comparison
+    // slider goes back to 3 years, and the payment tab is selected again.
+    refreshMakes(); makeSel.value = makes[0]; refreshModels();
+    horizonInput.value = 36; renderHorizon();
+    tabPayment.click();
     showStep(0);
   });
 
