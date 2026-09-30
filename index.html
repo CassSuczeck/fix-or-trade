@@ -751,6 +751,7 @@
       <p class="step-label">Step 5 of 5</p>
       <h2 class="step-title" tabindex="-1">Here's what the numbers say</h2>
       <p class="print-only" id="printDate"></p>
+      <p class="print-only print-contact">Safe Travels Mobile Repair · besafetravels.com · (908) 986-3415 · info@besafetravels.com</p>
 
       <div id="verdictCard" class="verdict-card">
         <p class="verdict-eyebrow" id="verdictEyebrow">OUR READ</p>
@@ -1416,7 +1417,52 @@
   window.addEventListener('afterprint', function(){
     detailsEls.forEach(function(d, i){ d.open = openBeforePrint[i]; });
   });
-  $('printBtn').addEventListener('click', function(){ window.print(); });
+  // The PDF's file name comes from the page title. Embedded, the browser uses the host page's
+  // title (e.g. "fix-or-trade"), which this frame can't change, so print from a small
+  // print-only window with our own title and header instead.
+  function printTitle(){
+    return 'Safe Travels Tool Results – ' + new Date().toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'});
+  }
+  function printHere(){
+    var oldTitle = document.title;
+    document.title = printTitle();
+    window.addEventListener('afterprint', function restore(){
+      document.title = oldTitle;
+      window.removeEventListener('afterprint', restore);
+    });
+    window.print();
+  }
+  function printInNewWindow(){
+    var w = window.open('', '_blank');
+    if(!w) return false; // popup blocked
+    var result = document.getElementById('step4').cloneNode(true);
+    result.removeAttribute('id');
+    Array.prototype.forEach.call(result.querySelectorAll('details'), function(d){ d.open = true; });
+    Array.prototype.forEach.call(result.querySelectorAll('[id]'), function(el){ el.removeAttribute('id'); });
+    var head = Array.prototype.map.call(document.querySelectorAll('head link[rel="stylesheet"], head style'),
+      function(el){ return el.outerHTML; }).join('\n');
+    var header = document.querySelector('header.top').outerHTML;
+    var doc = w.document;
+    doc.open();
+    doc.write('<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0"><title></title>' + head +
+      '</head><body><div class="wrap">' + header +
+      '<div class="title-block"><h1>Fix it, or trade it in?</h1></div>' +
+      '<div class="card"></div></div></body></html>');
+    doc.close();
+    doc.title = printTitle();
+    result.className = 'step active';
+    doc.querySelector('.card').appendChild(doc.importNode(result, true));
+    var go = function(){ w.focus(); w.print(); };
+    w.addEventListener('afterprint', function(){ w.close(); });
+    // Give the fonts a moment so the PDF doesn't use fallback fonts.
+    if(doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function(){ setTimeout(go, 150); }); else setTimeout(go, 500);
+    return true;
+  }
+  $('printBtn').addEventListener('click', function(){
+    if(EMBEDDED && printInNewWindow()) return;
+    printHere();
+  });
 
   // ---- send results to Safe Travels ----
   function resultText(contact){

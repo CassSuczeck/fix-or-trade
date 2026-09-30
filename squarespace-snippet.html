@@ -754,6 +754,7 @@
       &lt;p class=&quot;step-label&quot;&gt;Step 5 of 5&lt;/p&gt;
       &lt;h2 class=&quot;step-title&quot; tabindex=&quot;-1&quot;&gt;Here&#x27;s what the numbers say&lt;/h2&gt;
       &lt;p class=&quot;print-only&quot; id=&quot;printDate&quot;&gt;&lt;/p&gt;
+      &lt;p class=&quot;print-only print-contact&quot;&gt;Safe Travels Mobile Repair &#183; besafetravels.com &#183; (908) 986-3415 &#183; info@besafetravels.com&lt;/p&gt;
 
       &lt;div id=&quot;verdictCard&quot; class=&quot;verdict-card&quot;&gt;
         &lt;p class=&quot;verdict-eyebrow&quot; id=&quot;verdictEyebrow&quot;&gt;OUR READ&lt;/p&gt;
@@ -1419,7 +1420,52 @@
   window.addEventListener(&#x27;afterprint&#x27;, function(){
     detailsEls.forEach(function(d, i){ d.open = openBeforePrint[i]; });
   });
-  $(&#x27;printBtn&#x27;).addEventListener(&#x27;click&#x27;, function(){ window.print(); });
+  // The PDF&#x27;s file name comes from the page title. Embedded, the browser uses the host page&#x27;s
+  // title (e.g. &quot;fix-or-trade&quot;), which this frame can&#x27;t change, so print from a small
+  // print-only window with our own title and header instead.
+  function printTitle(){
+    return &#x27;Safe Travels Tool Results &#8211; &#x27; + new Date().toLocaleDateString(&#x27;en-US&#x27;, {year:&#x27;numeric&#x27;, month:&#x27;short&#x27;, day:&#x27;numeric&#x27;});
+  }
+  function printHere(){
+    var oldTitle = document.title;
+    document.title = printTitle();
+    window.addEventListener(&#x27;afterprint&#x27;, function restore(){
+      document.title = oldTitle;
+      window.removeEventListener(&#x27;afterprint&#x27;, restore);
+    });
+    window.print();
+  }
+  function printInNewWindow(){
+    var w = window.open(&#x27;&#x27;, &#x27;_blank&#x27;);
+    if(!w) return false; // popup blocked
+    var result = document.getElementById(&#x27;step4&#x27;).cloneNode(true);
+    result.removeAttribute(&#x27;id&#x27;);
+    Array.prototype.forEach.call(result.querySelectorAll(&#x27;details&#x27;), function(d){ d.open = true; });
+    Array.prototype.forEach.call(result.querySelectorAll(&#x27;[id]&#x27;), function(el){ el.removeAttribute(&#x27;id&#x27;); });
+    var head = Array.prototype.map.call(document.querySelectorAll(&#x27;head link[rel=&quot;stylesheet&quot;], head style&#x27;),
+      function(el){ return el.outerHTML; }).join(&#x27;\n&#x27;);
+    var header = document.querySelector(&#x27;header.top&#x27;).outerHTML;
+    var doc = w.document;
+    doc.open();
+    doc.write(&#x27;&lt;!DOCTYPE html&gt;&lt;html lang=&quot;en&quot; data-theme=&quot;light&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;UTF-8&quot;&gt;&#x27; +
+      &#x27;&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;&lt;title&gt;&lt;/title&gt;&#x27; + head +
+      &#x27;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;wrap&quot;&gt;&#x27; + header +
+      &#x27;&lt;div class=&quot;title-block&quot;&gt;&lt;h1&gt;Fix it, or trade it in?&lt;/h1&gt;&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;card&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&#x27;);
+    doc.close();
+    doc.title = printTitle();
+    result.className = &#x27;step active&#x27;;
+    doc.querySelector(&#x27;.card&#x27;).appendChild(doc.importNode(result, true));
+    var go = function(){ w.focus(); w.print(); };
+    w.addEventListener(&#x27;afterprint&#x27;, function(){ w.close(); });
+    // Give the fonts a moment so the PDF doesn&#x27;t use fallback fonts.
+    if(doc.fonts &amp;&amp; doc.fonts.ready) doc.fonts.ready.then(function(){ setTimeout(go, 150); }); else setTimeout(go, 500);
+    return true;
+  }
+  $(&#x27;printBtn&#x27;).addEventListener(&#x27;click&#x27;, function(){
+    if(EMBEDDED &amp;&amp; printInNewWindow()) return;
+    printHere();
+  });
 
   // ---- send results to Safe Travels ----
   function resultText(contact){
