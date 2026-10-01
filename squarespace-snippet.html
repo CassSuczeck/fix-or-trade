@@ -703,6 +703,11 @@
           &lt;label for=&quot;knownDown&quot;&gt;Cash down or due at signing ($)&lt;/label&gt;
           &lt;input type=&quot;number&quot; id=&quot;knownDown&quot; inputmode=&quot;numeric&quot; placeholder=&quot;e.g. 2000&quot; min=&quot;0&quot; value=&quot;0&quot;&gt;
         &lt;/div&gt;
+        &lt;div class=&quot;field&quot;&gt;
+          &lt;label for=&quot;knownPrice&quot;&gt;Price of the car &lt;span style=&quot;font-weight:500;color:var(--text-muted);&quot;&gt;(optional)&lt;/span&gt;&lt;/label&gt;
+          &lt;input type=&quot;number&quot; id=&quot;knownPrice&quot; inputmode=&quot;numeric&quot; placeholder=&quot;e.g. 28000&quot; min=&quot;0&quot; aria-describedby=&quot;knownPriceHint&quot;&gt;
+          &lt;p class=&quot;hint&quot; id=&quot;knownPriceHint&quot;&gt;If you&#x27;re buying, this lets us count what the car is still worth at the end. Leave it blank for a lease.&lt;/p&gt;
+        &lt;/div&gt;
         &lt;label class=&quot;checkrow&quot; for=&quot;paymentHasTrade&quot;&gt;
           &lt;input type=&quot;checkbox&quot; id=&quot;paymentHasTrade&quot;&gt;
           &lt;span&gt;This payment already includes my trade-in&lt;/span&gt;
@@ -1036,6 +1041,11 @@
     if(age &lt; retention.length) return retention[age];
     var extra = age - (retention.length-1);
     return Math.max(8, retention[retention.length-1] - extra*0.3);
+  }
+  // Same curve between whole years (e.g. 7.5 years old).
+  function retentionFrac(age){
+    var lo = Math.floor(Math.max(0, age)), f = Math.max(0, age) - lo;
+    return retentionAt(lo)*(1-f) + retentionAt(lo+1)*f;
   }
 
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
@@ -1384,7 +1394,13 @@
       cashDown = parseFloat($(&#x27;knownDown&#x27;).value)||0;
       // If the payment doesn&#x27;t already reflect the trade-in, the dealer&#x27;s credit comes back to you.
       tradeCredit = $(&#x27;paymentHasTrade&#x27;).checked ? 0 : tradeMid;
-      tradeNote = tradeCredit&gt;0 ? &#x27;minus &#x27; + money(tradeCredit) + &#x27; trade-in&#x27; : &#x27;trade-in already in your payment&#x27;;
+      // If they gave a price and the payments can&#x27;t cover it on their own, the trade-in must already be
+      // inside the payment (or it&#x27;s a lease): don&#x27;t hand the trade-in back a second time.
+      var givenPrice = parseFloat($(&#x27;knownPrice&#x27;).value)||0;
+      var tradeInferred = tradeCredit&gt;0 &amp;&amp; givenPrice&gt;0 &amp;&amp; cashDown + monthlyPay*termMonths &lt; givenPrice*0.95;
+      if(tradeInferred) tradeCredit = 0;
+      tradeNote = tradeCredit&gt;0 ? &#x27;minus &#x27; + money(tradeCredit) + &#x27; trade-in&#x27;
+        : (tradeInferred ? &#x27;trade-in assumed to be in your payment&#x27; : &#x27;trade-in already in your payment&#x27;);
     } else {
       var price = parseFloat($(&#x27;price&#x27;).value)||0;
       cashDown = parseFloat($(&#x27;down&#x27;).value)||0;
@@ -1404,7 +1420,29 @@
     var tradeTotal = mode===&#x27;payment&#x27; ? tradeGross - tradeCredit : tradeGross;
     if(mode===&#x27;price&#x27; &amp;&amp; tradeCredit &gt; price - cashDown) tradeTotal -= (tradeCredit - Math.max(0, price - cashDown));
 
-    var diff = tradeTotal - fixTotal;
+    // ---- what each car is still worth at the end (F20) ----
+    // Keeping: you still own your car, a few years older. Replacing: you own the newer car, minus what
+    // you still owe on it. Counting both keeps the comparison fair (the trade-in is already counted).
+    var years = horizonMonths/12;
+    var keepValueLeft = tradeMid * retentionFrac(age+years) / retentionFrac(age);
+    var newPrice = mode===&#x27;payment&#x27; ? (parseFloat($(&#x27;knownPrice&#x27;).value)||0) : price;
+    var newValueLeft = 0, loanLeft = 0;
+    if(newPrice &gt; 0){
+      newValueLeft = newPrice * retentionFrac(years) / 100; // assumes it loses value like a new car
+      var paidMonths = Math.min(horizonMonths, termMonths);
+      if(mode===&#x27;price&#x27;){
+        var rr = apr/100/12, n = termMonths;
+        loanLeft = principal===0 ? 0 : (rr===0 ? principal*(1 - paidMonths/n)
+          : principal*(Math.pow(1+rr,n) - Math.pow(1+rr,paidMonths))/(Math.pow(1+rr,n) - 1));
+      } else {
+        loanLeft = monthlyPay * Math.max(0, termMonths - paidMonths); // payments still due (a little high: includes interest)
+      }
+    }
+    var newEquity = Math.max(0, newValueLeft - loanLeft);
+    var keepNet = fixTotal - keepValueLeft;
+    var tradeNet = tradeTotal - newEquity;
+
+    var diff = tradeNet - keepNet;
 
     // ---- scoring ----
     var points = 0;
@@ -1423,9 +1461,11 @@
     $(&#x27;statTradeInConf&#x27;).textContent = finalConf+&#x27; confidence&#x27; + (isOther ? &#x27; &#183; category estimate&#x27; : &#x27;&#x27;);
     $(&#x27;statRatio&#x27;).textContent = tradeMid&gt;0 ? Math.round(ratio*100)+&#x27;%&#x27; : &#x27;&#8212;&#x27;;
     $(&#x27;statFixTotal&#x27;).textContent = money(fixTotal);
-    $(&#x27;statFixSub&#x27;).textContent = &#x27;repair + upkeep over &#x27; + period;
+    $(&#x27;statFixSub&#x27;).textContent = &#x27;repair + upkeep over &#x27; + period + &#x27;. You\&#x27;d still own your car, worth about &#x27; + money(keepValueLeft) + &#x27; then&#x27;;
     $(&#x27;statTradeTotal&#x27;).textContent = money(tradeTotal);
-    $(&#x27;statTradeSub&#x27;).textContent = &#x27;over &#x27; + period + &#x27;, &#x27; + tradeNote;
+    $(&#x27;statTradeSub&#x27;).textContent = &#x27;over &#x27; + period + &#x27;, &#x27; + tradeNote + &#x27;. &#x27; + (newPrice&gt;0
+      ? (newEquity&gt;0 ? &#x27;The newer car would be worth about &#x27; + money(newEquity) + &#x27; more than you still owe&#x27; : &#x27;You\&#x27;d still owe about what the newer car is worth&#x27;)
+      : &#x27;Nothing counted for the newer car at the end (no price entered)&#x27;);
 
     var verdictCard = $(&#x27;verdictCard&#x27;);
     var headline = $(&#x27;verdictHeadline&#x27;);
@@ -1475,6 +1515,11 @@
     } else {
       reasons.push(&#x27;Replacing it runs about &#x27; + money(tradeTotal) + &#x27; over the same period (&#x27; + money(cashDown) + &#x27; down + &#x27; + money(monthlyPay) + &#x27;/month&#x27; + (tradeCredit&gt;0 ? &#x27;, after your &#x27; + money(tradeCredit) + &#x27; trade-in lowers the loan&#x27; : &#x27;&#x27;) + &#x27;).&#x27;);
     }
+    reasons.push(&#x27;At the end, you\&#x27;d still own your car, worth about &#x27; + money(keepValueLeft) + &#x27;. &#x27; + (newPrice&gt;0
+      ? &#x27;The newer car would be worth about &#x27; + money(newValueLeft) + (loanLeft&gt;0 ? &#x27;, with about &#x27; + money(loanLeft) + &#x27; still owed on it&#x27; : &#x27;&#x27;) + &#x27;.&#x27;
+      : &#x27;We don\&#x27;t count anything for the newer car, because no price was entered (as with a lease).&#x27;));
+    var ahead = Math.abs(diff);
+    reasons.push(&#x27;Counting what each car is still worth, &#x27; + (diff&gt;=0 ? &#x27;keeping your car comes out about &#x27; : &#x27;replacing it comes out about &#x27;) + money(ahead) + &#x27; ahead over &#x27; + period + &#x27;.&#x27;);
     if(age&gt;=12 &amp;&amp; mileage &gt; age*12000*1.3){
       reasons.push(&#x27;Higher-than-typical mileage for its age adds some reliability risk to factor in.&#x27;);
     }
@@ -1501,7 +1546,7 @@
       [&#x27;Electronics / software&#x27;, swIssues.length ? swIssues.join(&#x27;; &#x27;) : &#x27;No problems reported&#x27;],
       [&#x27;Repair quote&#x27;, repairCost&gt;0 ? money(repairCost) : &#x27;None&#x27;],
       mode===&#x27;payment&#x27;
-        ? [&#x27;New car&#x27;, money(monthlyPay) + &#x27;/mo for &#x27; + termMonths + &#x27; mo, &#x27; + money(cashDown) + &#x27; down&#x27; + ($(&#x27;paymentHasTrade&#x27;).checked ? &#x27;, trade-in included&#x27; : &#x27;&#x27;)]
+        ? [&#x27;New car&#x27;, money(monthlyPay) + &#x27;/mo for &#x27; + termMonths + &#x27; mo, &#x27; + money(cashDown) + &#x27; down&#x27; + ($(&#x27;paymentHasTrade&#x27;).checked ? &#x27;, trade-in included&#x27; : &#x27;&#x27;) + (newPrice&gt;0 ? &#x27;, price &#x27; + money(newPrice) : &#x27;, no price (lease or not given)&#x27;)]
         : [&#x27;New car&#x27;, money(parseFloat($(&#x27;price&#x27;).value)||0) + &#x27; at &#x27; + (parseFloat($(&#x27;apr&#x27;).value)||0) + &#x27;% for &#x27; + termMonths + &#x27; mo, &#x27; + money(cashDown) + &#x27; down&#x27; + (tradeCredit&gt;0 ? &#x27;, trade-in applied&#x27; : &#x27;&#x27;)],
       [&#x27;Comparing over&#x27;, period]
     ];
@@ -1523,12 +1568,14 @@
       (swIssues.length ? (swCounts ? &#x27;, plus the electronics problems (3% off for each)&#x27; : &#x27; (the electronics problems don\&#x27;t lower it, since you said it\&#x27;s under warranty)&#x27;) : &#x27;&#x27;) +
       &#x27;. The range shows how much cars like yours usually vary.&#x27;;
     var mathKeep = (repairCost&gt;0 ? &#x27;Your repair quote (&#x27; + money(repairCost) + &#x27;)&#x27; : &#x27;No repair quote&#x27;) +
-      &#x27;, plus about &#x27; + money(maintMonthly) + &#x27; a month in upkeep over &#x27; + period + &#x27;. Upkeep starts at $70 a month, rises about $9 for each year of age past 2 (up to $230), and goes up for fair or poor condition, rust and out-of-warranty electronics problems.&#x27;;
+      &#x27;, plus about &#x27; + money(maintMonthly) + &#x27; a month in upkeep over &#x27; + period + &#x27;. Upkeep starts at $70 a month, rises about $9 for each year of age past 2 (up to $230), and goes up for fair or poor condition, rust and out-of-warranty electronics problems.&#x27; +
+      &#x27; At the end you still own the car: we expect it to be worth about &#x27; + money(keepValueLeft) + &#x27; then (today\&#x27;s estimate, aged &#x27; + period + &#x27; along the same value curve), and count that in its favor.&#x27;;
     var mathReplace;
     if(mode===&#x27;payment&#x27;){
       mathReplace = &#x27;Your &#x27; + money(cashDown) + &#x27; down, plus &#x27; + money(monthlyPay) + &#x27; a month for &#x27; + coveredMonths + &#x27; months&#x27; +
         (tradeCredit&gt;0 ? &#x27;, minus your trade-in\&#x27;s estimated value (&#x27; + money(tradeCredit) + &#x27;), which the dealer would credit to you.&#x27;
-                       : &#x27;. Your trade-in isn\&#x27;t subtracted, because you said it\&#x27;s already included in that payment.&#x27;);
+         : tradeInferred ? &#x27;. Your trade-in isn\&#x27;t subtracted: those payments alone wouldn\&#x27;t cover a &#x27; + money(givenPrice) + &#x27; price, so we assume it\&#x27;s already in them.&#x27;
+                         : &#x27;. Your trade-in isn\&#x27;t subtracted, because you said it\&#x27;s already included in that payment.&#x27;);
     } else {
       mathReplace = &#x27;Your &#x27; + money(cashDown) + &#x27; down, plus the monthly payments on a loan for the price (&#x27; + money(price) + &#x27;) minus your down payment&#x27; +
         (tradeCredit&gt;0 ? &#x27; and your trade-in (&#x27; + money(tradeCredit) + &#x27;)&#x27; : &#x27;&#x27;) +
@@ -1536,8 +1583,12 @@
         (tradeCredit&gt;0 ? &#x27;&#x27; : &#x27; Your trade-in isn\&#x27;t applied, because you left that option off.&#x27;);
     }
     if(afterTermUpkeep&gt;0) mathReplace += &#x27; After the loan ends, we add about $40 a month for light upkeep on the newer car.&#x27;;
-    mathReplace += &#x27; Not included: sales tax, MVC title and registration fees, insurance, or what the newer car is still worth at the end.&#x27;;
-    var mathVerdict = &#x27;The verdict weighs the repair against your car\&#x27;s value (a repair over about 35% of the value leans toward trading in, over 60% strongly), which option costs less over &#x27; + period +
+    mathReplace += newPrice&gt;0
+      ? &#x27; At the end you own the newer car: we expect it to be worth about &#x27; + money(newValueLeft) + &#x27; (assuming it loses value like a new car; a used one usually loses a little less)&#x27; +
+        (loanLeft&gt;0 ? &#x27;, minus about &#x27; + money(loanLeft) + &#x27; still owed&#x27; : &#x27;&#x27;) + &#x27;, and count that in its favor.&#x27;
+      : &#x27; You didn\&#x27;t enter the newer car\&#x27;s price, so we count nothing for it at the end, as with a lease. If you\&#x27;re buying, add the price for a fairer comparison.&#x27;;
+    mathReplace += &#x27; Not included: sales tax, MVC title and registration fees, or insurance.&#x27;;
+    var mathVerdict = &#x27;The verdict weighs the repair against your car\&#x27;s value (a repair over about 35% of the value leans toward trading in, over 60% strongly), which option costs less over &#x27; + period + &#x27; once each car\&#x27;s value at the end is counted (&#x27; + (diff&gt;=0 ? &#x27;keeping&#x27; : &#x27;replacing&#x27;) + &#x27; by about &#x27; + money(Math.abs(diff)) + &#x27;)&#x27; +
       &#x27;, your car\&#x27;s age and mileage, and the condition, rust and electronics problems you reported.&#x27; +
       (repairCost&gt;0 ? &#x27;&#x27; : &#x27; With no repair on the table, it leans toward keeping the car.&#x27;);
     $(&#x27;mathBody&#x27;).innerHTML =
@@ -1556,6 +1607,9 @@
       repairRatio: tradeMid&gt;0 ? Math.round(ratio*100)+&#x27;%&#x27; : &#x27;&#8212;&#x27;,
       keepCost: money(fixTotal),
       tradeCost: money(tradeTotal),
+      keepValueLeft: money(keepValueLeft),
+      newEquity: newPrice&gt;0 ? money(newEquity) : &#x27;not counted (no price)&#x27;,
+      netAhead: (diff&gt;=0 ? &#x27;Keeping&#x27; : &#x27;Replacing&#x27;) + &#x27; by about &#x27; + money(Math.abs(diff)),
       reasons: reasons
     };
   }
@@ -1631,6 +1685,9 @@
     lines.push(&#x27;Repair as % of value: &#x27; + r.repairRatio);
     lines.push(&#x27;Cost to keep &amp; fix: &#x27; + r.keepCost);
     lines.push(&#x27;Net cost to trade in &amp; replace: &#x27; + r.tradeCost);
+    lines.push(&#x27;Current car still worth at the end: &#x27; + r.keepValueLeft);
+    lines.push(&#x27;Newer car equity at the end: &#x27; + r.newEquity);
+    lines.push(&#x27;Comes out ahead: &#x27; + r.netAhead);
     lines.push(&#x27;&#x27;);
     r.answers.forEach(function(a){ lines.push(a[0] + &#x27;: &#x27; + a[1]); });
     lines.push(&#x27;&#x27;);
