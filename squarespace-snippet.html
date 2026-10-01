@@ -579,12 +579,12 @@
 
       &lt;div class=&quot;field&quot;&gt;
         &lt;label for=&quot;make&quot;&gt;Make&lt;/label&gt;
-        &lt;select id=&quot;make&quot;&gt;&lt;/select&gt;
+        &lt;select id=&quot;make&quot; aria-describedby=&quot;err0&quot;&gt;&lt;/select&gt;
       &lt;/div&gt;
 
       &lt;div class=&quot;field&quot; id=&quot;modelField&quot;&gt;
         &lt;label for=&quot;model&quot;&gt;Model&lt;/label&gt;
-        &lt;select id=&quot;model&quot;&gt;&lt;/select&gt;
+        &lt;select id=&quot;model&quot; aria-describedby=&quot;err0&quot;&gt;&lt;/select&gt;
       &lt;/div&gt;
 
       &lt;div class=&quot;field&quot; id=&quot;categoryField&quot; style=&quot;display:none;&quot;&gt;
@@ -859,6 +859,7 @@
         &lt;p&gt;Your answers stay in your browser unless you choose to send them to us. If you do, we use them only to reply to your request.&lt;/p&gt;
       &lt;/div&gt;
 
+      &lt;button class=&quot;restart&quot; id=&quot;back4&quot;&gt;Change my answers&lt;/button&gt;
       &lt;button class=&quot;restart&quot; id=&quot;restart&quot;&gt;Start over with different numbers&lt;/button&gt;
     &lt;/div&gt;
 
@@ -1134,6 +1135,7 @@
   function refreshMakes(){
     var year = enteredYear(), keep = makeSel.value;
     makeSel.innerHTML = &#x27;&#x27;;
+    addOpt(makeSel, &#x27;&#x27;, &#x27;Choose a make&#x27;);
     makes.filter(function(m){ return modelsFor(m, year).length &gt; 0; }).forEach(function(m){ addOpt(makeSel, m, m); });
     addOpt(makeSel, &#x27;__other__&#x27;, &#x27;Other / not listed&#x27;);
     makeSel.value = keep;
@@ -1152,14 +1154,15 @@
     }
     modelField.style.display=&#x27;block&#x27;;
     categoryField.style.display=&#x27;none&#x27;;
-    modelsFor(makeSel.value, enteredYear()).forEach(function(name){ addOpt(modelSel, name, name); });
+    addOpt(modelSel, &#x27;&#x27;, makeSel.value ? &#x27;Choose a model&#x27; : &#x27;Choose a make first&#x27;);
+    if(makeSel.value) modelsFor(makeSel.value, enteredYear()).forEach(function(name){ addOpt(modelSel, name, name); });
     modelSel.value = keep;
     if(modelSel.selectedIndex &lt; 0) modelSel.selectedIndex = 0;
   }
   makeSel.addEventListener(&#x27;change&#x27;, refreshModels);
   // Typing or changing the year re-filters both lists to what was actually sold that year.
   [&#x27;input&#x27;,&#x27;change&#x27;].forEach(function(ev){ $(&#x27;year&#x27;).addEventListener(ev, function(){ refreshMakes(); refreshModels(); }); });
-  makeSel.value = makes[0];
+  makeSel.value = &#x27;&#x27;;
   refreshModels();
 
   // ---- step navigation ----
@@ -1195,6 +1198,16 @@
       $(badYear ? &#x27;year&#x27; : &#x27;mileage&#x27;).focus();
       return;
     }
+    // Nothing is pre-selected, so nobody gets an estimate for a car they didn&#x27;t pick.
+    var noMake = !makeSel.value, noModel = makeSel.value !== &#x27;__other__&#x27; &amp;&amp; !modelSel.value;
+    makeSel.setAttribute(&#x27;aria-invalid&#x27;, noMake ? &#x27;true&#x27; : &#x27;false&#x27;);
+    modelSel.setAttribute(&#x27;aria-invalid&#x27;, !noMake &amp;&amp; noModel ? &#x27;true&#x27; : &#x27;false&#x27;);
+    if(noMake || noModel){
+      err.textContent = noMake ? &#x27;Choose your car\&#x27;s make, or &quot;Other / not listed&quot;.&#x27; : &#x27;Choose your car\&#x27;s model.&#x27;;
+      err.style.display=&#x27;block&#x27;;
+      (noMake ? makeSel : modelSel).focus();
+      return;
+    }
     // Never price a car that didn&#x27;t exist (e.g. a 1999 Dodge Hornet).
     if(makeSel.value !== &#x27;__other__&#x27; &amp;&amp; !soldIn(makeSel.value, modelSel.value, year)){
       err.textContent = &#x27;We don\&#x27;t have a &#x27; + year + &#x27; &#x27; + makeSel.value + &#x27; &#x27; + modelSel.value + &#x27; on record in the US. Check the model year, or choose &quot;Other / not listed&quot; for a category estimate.&#x27;;
@@ -1211,6 +1224,8 @@
   $(&#x27;back2&#x27;).addEventListener(&#x27;click&#x27;, function(){ showStep(1); });
   $(&#x27;next2&#x27;).addEventListener(&#x27;click&#x27;, function(){ showStep(3); });
   $(&#x27;back3&#x27;).addEventListener(&#x27;click&#x27;, function(){ showStep(2); });
+  // From the result, go back to the last step with every answer kept.
+  $(&#x27;back4&#x27;).addEventListener(&#x27;click&#x27;, function(){ showStep(3); });
 
   var swBoxes = document.querySelectorAll(&#x27;input.sw&#x27;);
   function refreshWarranty(){
@@ -1296,7 +1311,7 @@
     // Put everything back the way a first visit sees it: the year was cleared, so the make and
     // model lists must be rebuilt (they were still filtered by the old year), the comparison
     // slider goes back to 3 years, and the payment tab is selected again.
-    refreshMakes(); makeSel.value = makes[0]; refreshModels();
+    refreshMakes(); makeSel.value = &#x27;&#x27;; refreshModels();
     horizonInput.value = 36; renderHorizon();
     tabPayment.click();
     showStep(0);
@@ -1423,7 +1438,9 @@
       headline.textContent = &#x27;Trade it in&#x27;;
       sub.textContent = rust.pts===2
         ? &#x27;Structural rust changes the picture. It\&#x27;s a safety issue, and it\&#x27;s rarely worth putting big money into.&#x27;
-        : &#x27;The math leans toward moving on. Repairs and upkeep are eating into what this car is still worth.&#x27;;
+        : ratio&gt;0.35
+        ? &#x27;The math leans toward moving on. Repairs and upkeep are eating into what this car is still worth.&#x27;
+        : &#x27;On these numbers, a newer car comes out ahead over &#x27; + period + &#x27;. Before you decide, let us inspect it: if it still has good years left, keeping it running can still make sense.&#x27;;
       resultCta.href = &#x27;https://www.besafetravels.com/appointments&#x27;;
       resultCtaText.textContent = &#x27;Get a pre-trade inspection first&#x27;;
     } else {

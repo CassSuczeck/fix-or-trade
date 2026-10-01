@@ -576,12 +576,12 @@
 
       <div class="field">
         <label for="make">Make</label>
-        <select id="make"></select>
+        <select id="make" aria-describedby="err0"></select>
       </div>
 
       <div class="field" id="modelField">
         <label for="model">Model</label>
-        <select id="model"></select>
+        <select id="model" aria-describedby="err0"></select>
       </div>
 
       <div class="field" id="categoryField" style="display:none;">
@@ -856,6 +856,7 @@
         <p>Your answers stay in your browser unless you choose to send them to us. If you do, we use them only to reply to your request.</p>
       </div>
 
+      <button class="restart" id="back4">Change my answers</button>
       <button class="restart" id="restart">Start over with different numbers</button>
     </div>
 
@@ -1131,6 +1132,7 @@
   function refreshMakes(){
     var year = enteredYear(), keep = makeSel.value;
     makeSel.innerHTML = '';
+    addOpt(makeSel, '', 'Choose a make');
     makes.filter(function(m){ return modelsFor(m, year).length > 0; }).forEach(function(m){ addOpt(makeSel, m, m); });
     addOpt(makeSel, '__other__', 'Other / not listed');
     makeSel.value = keep;
@@ -1149,14 +1151,15 @@
     }
     modelField.style.display='block';
     categoryField.style.display='none';
-    modelsFor(makeSel.value, enteredYear()).forEach(function(name){ addOpt(modelSel, name, name); });
+    addOpt(modelSel, '', makeSel.value ? 'Choose a model' : 'Choose a make first');
+    if(makeSel.value) modelsFor(makeSel.value, enteredYear()).forEach(function(name){ addOpt(modelSel, name, name); });
     modelSel.value = keep;
     if(modelSel.selectedIndex < 0) modelSel.selectedIndex = 0;
   }
   makeSel.addEventListener('change', refreshModels);
   // Typing or changing the year re-filters both lists to what was actually sold that year.
   ['input','change'].forEach(function(ev){ $('year').addEventListener(ev, function(){ refreshMakes(); refreshModels(); }); });
-  makeSel.value = makes[0];
+  makeSel.value = '';
   refreshModels();
 
   // ---- step navigation ----
@@ -1192,6 +1195,16 @@
       $(badYear ? 'year' : 'mileage').focus();
       return;
     }
+    // Nothing is pre-selected, so nobody gets an estimate for a car they didn't pick.
+    var noMake = !makeSel.value, noModel = makeSel.value !== '__other__' && !modelSel.value;
+    makeSel.setAttribute('aria-invalid', noMake ? 'true' : 'false');
+    modelSel.setAttribute('aria-invalid', !noMake && noModel ? 'true' : 'false');
+    if(noMake || noModel){
+      err.textContent = noMake ? 'Choose your car\'s make, or "Other / not listed".' : 'Choose your car\'s model.';
+      err.style.display='block';
+      (noMake ? makeSel : modelSel).focus();
+      return;
+    }
     // Never price a car that didn't exist (e.g. a 1999 Dodge Hornet).
     if(makeSel.value !== '__other__' && !soldIn(makeSel.value, modelSel.value, year)){
       err.textContent = 'We don\'t have a ' + year + ' ' + makeSel.value + ' ' + modelSel.value + ' on record in the US. Check the model year, or choose "Other / not listed" for a category estimate.';
@@ -1208,6 +1221,8 @@
   $('back2').addEventListener('click', function(){ showStep(1); });
   $('next2').addEventListener('click', function(){ showStep(3); });
   $('back3').addEventListener('click', function(){ showStep(2); });
+  // From the result, go back to the last step with every answer kept.
+  $('back4').addEventListener('click', function(){ showStep(3); });
 
   var swBoxes = document.querySelectorAll('input.sw');
   function refreshWarranty(){
@@ -1293,7 +1308,7 @@
     // Put everything back the way a first visit sees it: the year was cleared, so the make and
     // model lists must be rebuilt (they were still filtered by the old year), the comparison
     // slider goes back to 3 years, and the payment tab is selected again.
-    refreshMakes(); makeSel.value = makes[0]; refreshModels();
+    refreshMakes(); makeSel.value = ''; refreshModels();
     horizonInput.value = 36; renderHorizon();
     tabPayment.click();
     showStep(0);
@@ -1420,7 +1435,9 @@
       headline.textContent = 'Trade it in';
       sub.textContent = rust.pts===2
         ? 'Structural rust changes the picture. It\'s a safety issue, and it\'s rarely worth putting big money into.'
-        : 'The math leans toward moving on. Repairs and upkeep are eating into what this car is still worth.';
+        : ratio>0.35
+        ? 'The math leans toward moving on. Repairs and upkeep are eating into what this car is still worth.'
+        : 'On these numbers, a newer car comes out ahead over ' + period + '. Before you decide, let us inspect it: if it still has good years left, keeping it running can still make sense.';
       resultCta.href = 'https://www.besafetravels.com/appointments';
       resultCtaText.textContent = 'Get a pre-trade inspection first';
     } else {
