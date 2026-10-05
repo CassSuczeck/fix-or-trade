@@ -330,6 +330,7 @@
   }
 
   /* Results */
+  .service-note{ background:#FFF1D6; color:#5A3B00; border-radius:12px; padding:12px 14px; margin:16px 0 0; font-size:15px; line-height:1.5; font-weight:500; }
   .verdict-card{
     text-align:center;
     border-radius: 22px;
@@ -841,9 +842,10 @@
         <button class="primary" type="submit" id="sendBtn">Send my results to Safe Travels</button>
       </form>
 
+      <p class="service-note" id="serviceNote" hidden></p>
       <a class="cta-link" id="resultCta" href="https://www.besafetravels.com/appointments" target="_blank" rel="noopener">
         <span id="resultCtaText">Book with Safe Travels</span>
-        <span class="arrow" aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span>
+        <span class="arrow" id="resultCtaArrow" aria-hidden="true">↗</span><span class="sr-only" id="resultCtaNewTab"> (opens in a new tab)</span>
       </a>
 
       <div class="disclaimer">
@@ -959,7 +961,7 @@
     "Lexus": {f:1.15, m:"CT:lcar,IS:lcar,RC:lcar,ES:lmid,GS:lmid,LS:lmid:1.2,LC:perf,UX:lsuv,NX:lsuv,RX:lmsuv,GX:lmsuv:1.2,TX:lmsuv,LX:lfsuv:1.3,RZ:evsuv"},
     "Lincoln": {f:0.8, m:"MKZ:lmid,Continental:lmid,Town Car:lmid,MKC:lsuv,Corsair:lsuv,MKX:lmsuv,Nautilus:lmsuv,MKT:lmsuv,Aviator:lmsuv:1.2,Navigator:lfsuv"},
     "Lucid": {f:0.6, m:"Air:ev:3,Gravity:evsuv:3"},
-    "Maserati": {f:0.6, m:"Ghibli:lmid,Quattroporte:lmid:1.2,Levante:lmsuv,Grecale:lsuv:1.4"},
+    "Maserati": {f:0.6, m:"Ghibli:lmid,Quattroporte:lmid:1.2,Levante:lmsuv,Grecale:lsuv:1.4,Grecale Folgore:evsuv:1.6,GranTurismo Folgore:ev:2.5,MC20:exotic:1.2,MCPura:exotic:1.3"},
     "Mazda": {f:1.0, m:"Mazda3:car,Mazda6:mid,MX-5 Miata:sport,RX-8:sport:0.6,CX-3:xsuv,CX-30:xsuv,CX-5:csuv,CX-50:csuv,CX-7:csuv,CX-9:msuv,CX-70:msuv,CX-90:msuv,MX-30:ev:0.6"},
     "McLaren": {f:2.5, m:"570S:exotic,GT:exotic,720S:exotic:1.3,750S:exotic:1.5,Artura:exotic:1.2"},
     "Mercedes-Benz": {f:0.85, m:"A-Class:lcar,CLA:lcar,C-Class:lcar,E-Class:lmid,CLS:lmid:1.1,S-Class:lmid:1.5,SL:perf,AMG GT:perf:1.4,GLA:lsuv:0.9,GLB:lsuv,GLK:lsuv,GLC:lsuv,M-Class / ML:lmsuv,GLE:lmsuv,GL:lmsuv,GLS:lfsuv,G-Class:lfsuv:2.5,EQB:evsuv,EQE:ev:2,EQS:ev:2.5,Metris:cvan,Sprinter:cvan:1.3"},
@@ -1100,6 +1102,23 @@
     "Volkswagen": "Golf:1990-2021,GTI:1990-now,Golf R:2012-2013|2015-2019|2022-now,Jetta:1990-now,Beetle:1998-2019,Passat:1990-2022,CC:2009-2017,Arteon:2019-2023,Taos:2022-now,Tiguan:2009-now,Atlas:2018-now,Atlas Cross Sport:2020-now,Touareg:2004-2017,ID.4:2021-now,ID. Buzz:2025-now",
     "Volvo": "S60:2001-now,V60:2015-now,S90:2017-2025,V90:2017-now,XC40:2019-now,XC60:2010-now,XC90:2003-now,C40 / EC40:2022-now,XC40 Recharge / EX40:2021-now,EX30:2025-now,EX90:2025-now"
   };
+  // Vehicles Safe Travels doesn't service. Keep in sync with the calculator
+  // (tools.besafetravels.com/calculator: EV_ONLY_MAKES, BRAND_TIER tier 4, SPECIALTY_MODELS, OBD2_FROM_YEAR).
+  var EXOTIC_MAKES = ['Ferrari','Lamborghini','Bentley','Rolls-Royce','Aston Martin','Bugatti','McLaren','Lotus'];
+  var SPECIALTY_MODELS = { 'Maserati': ['MC20','MCPura'] };
+  var OBD2_FROM_YEAR = 1996;
+  var NOT_SERVICED_TEXT = {
+    ev: 'We don\'t service electric vehicles, so we can\'t do this repair. Call us and we\'ll point you to a shop that does.',
+    exotic: 'This car needs a specialty shop, so we can\'t do this repair. Call us and we\'ll refer you to one.',
+    old: 'We work on cars from model year 1996 on, so we can\'t do this repair. Call us and we\'ll refer you to a shop.'
+  };
+  function notServicedReason(make, model, year, seg){
+    if(seg === 'ev' || seg === 'evsuv') return 'ev';
+    if(EXOTIC_MAKES.indexOf(make) > -1) return 'exotic';
+    if(SPECIALTY_MODELS[make] && SPECIALTY_MODELS[make].some(function(m){ return String(model||'').indexOf(m) === 0; })) return 'exotic';
+    if(year && year < OBD2_FROM_YEAR) return 'old';
+    return null;
+  }
   function yearRanges(make, model){
     var list = MODEL_YEARS[make];
     if(!list) return null;
@@ -1486,6 +1505,22 @@
       sub.textContent = 'Keeping and repairing your current car looks like the stronger financial move right now.';
       resultCta.href = 'https://www.besafetravels.com/appointments';
       resultCtaText.textContent = 'Book your repair with Safe Travels';
+    }
+
+    // Cars Safe Travels doesn't service get a referral instead of a booking button
+    // (same rules as the calculator: EVs, exotic makes, Maserati MC20/MCPura, model years before 1996).
+    var noService = notServicedReason(makeSel.value, modelSel.value, year, seg);
+    var serviceNote = $('serviceNote');
+    serviceNote.hidden = !noService;
+    if(noService){
+      serviceNote.textContent = NOT_SERVICED_TEXT[noService];
+      resultCta.href = 'tel:+19089863415';
+      resultCta.removeAttribute('target');
+      $('resultCtaArrow').hidden = true; $('resultCtaNewTab').hidden = true;
+      resultCtaText.textContent = 'Call (908) 986-3415 for a shop referral';
+    } else {
+      resultCta.setAttribute('target', '_blank');
+      $('resultCtaArrow').hidden = false; $('resultCtaNewTab').hidden = false;
     }
 
     // reasoning bullets
