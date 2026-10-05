@@ -1,3 +1,5 @@
+> **Moved (2026-10-05):** the tool now lives in [`CassSuczeck/Tools`](https://github.com/CassSuczeck/Tools) at `fix-or-trade/index.html` and is served at https://tools.besafetravels.com/fix-or-trade/. Edit it there. This repo keeps the Apps Script lead receiver (`apps-script/`) and older notes; `index.html` here only forwards to the new address. `embed.html`, `squarespace-snippet.html` and `squarespace-custom-css.css` are no longer used (Squarespace /fix-or-trade is now a button page).
+
 # Fix it, or trade it in? — Safe Travels Mobile Repair
 
 A free, 5-step web tool that helps a car owner decide whether to repair their current car or trade it in. It's built as one self-contained web page for Safe Travels Mobile Repair (Middletown / Port Monmouth, NJ).
