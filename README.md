@@ -43,10 +43,10 @@ A free, 5-step web tool that helps a car owner decide whether to repair their cu
 All of the logic is in the `<script>` at the bottom of `index.html`.
 
 ### Trade-in value
-1. **Reference value.** Each model's base value is what a 2018 car (8 years old) trades in for in 2026.
-   - 17 models have hand-researched ranges (`OVERRIDES`, 2018 row; rows for 2016–2024 are stored too).
-   - Every other model's value is `category base value × brand resale factor × optional model factor` (`SEGMENTS` and `BRANDS`), with a range of ±15%.
-2. **Age:** scaled with a typical depreciation curve (`retention`).
+1. **Reference value.**
+   - 17 models have hand-researched ranges (`OVERRIDES`) for cars 2, 4, 6, 8 and 10 years old (model years 2016–2024, priced in 2026). The tool uses the row for the car's age, a straight-line blend between the two nearest ages, or, outside 2–10 years, the nearest row moved along the age curve (`researchedRange`). Rows are keyed by age, so a 6-year-old car gets the same starting value in 2027 as in 2026. A row worth more at either end than the next younger row is an outlier and is skipped (Feather, 2026-10-16: some cars are worth more even when older; today the 2016 Corolla, Sentra, BMW 3 Series, C-Class, A4, Jetta and Tiguan).
+   - Every other model's value is what an 8-year-old car trades in for: `category base value × brand resale factor × optional model factor` (`SEGMENTS` and `BRANDS`), with a range of ±15%.
+2. **Age:** other models are scaled with a typical depreciation curve (`retention`). Since F28 (2026-10-16) a 6-year-old car is worth about 1.47× an 8-year-old one, as in the researched data (was 1.22×).
 3. **Mileage:** compared with 12,000 miles/year. The value moves up or down by at most 35%.
 4. **Condition:**
 
@@ -56,7 +56,7 @@ All of the logic is in the `<script>` at the bottom of `index.html`.
    | Rust | None ×1.0, Surface ×0.97, Body ×0.85, Frame/brake-line ×0.60 |
    | Electronics problems (only when not under warranty) | −3% each |
 
-5. **Confidence** starts at High, Medium or Low, depending on the data source. It drops a level for a category estimate, a car more than 4 years from the 2018 reference, mileage far from normal, or any body or frame rust. EVs, exotics and discontinued brands are always Low.
+5. **Confidence** starts at High, Medium or Low, depending on the data source. It drops a level for a category estimate, a car more than 4 years from the nearest researched age (other models: from 8 years), mileage far from normal, or any body or frame rust. EVs, exotics and discontinued brands are always Low.
 
 ### Cost to keep & fix
 `repair quote + monthly upkeep × months`
@@ -94,8 +94,9 @@ The tool adds up points, and more than 0 points means "Trade it in".
 
 ### Updating the data
 - **Add a model:** add `Model:segment` to its brand's `m:` list in `BRANDS`. To adjust one model's value, add a factor, e.g. `4Runner:msuv:1.3`.
-- **Use a researched range:** add a row to `OVERRIDES` (`years:{2018:[low, high, "confidence"], ...}`). It replaces the formula for that model. The math uses the `ANCHOR_YEAR` (2018) row; the other years (2016, 2020, 2022, 2024, from Feather's valuation reference CSV of 2026-10-16) are reference points for tuning the age curve. The CSV's master copy is `docs/valuation-reference.csv` in the private calculator repo.
-- **Refresh every year:** the reference values are for 2018 cars priced in 2026. Each year, re-check a few `OVERRIDES` against KBB or Edmunds and nudge the `SEGMENTS` base values to match.
+- **Use a researched range:** add a row to `OVERRIDES` (`years:{2018:[low, high, "confidence"], ...}`, one entry per model year). It replaces the formula for that model. Values come from Feather's valuation reference CSV (master copy: `docs/valuation-reference.csv` in the private calculator repo). After a refresh, set `REF_PRICED_YEAR` to the year they were priced.
+- **Refresh every year:** the researched values (`OVERRIDES`) are for model years 2016–2024 priced in 2026 (ages 2–10), and the `SEGMENTS` base values are for an 8-year-old car. Each year, refresh the valuation reference CSV, update `OVERRIDES` and `REF_PRICED_YEAR`, and nudge the `SEGMENTS` base values to match.
+- **Keep "How we calculated this" in step with the math:** the text on the results page is built in `computeAndShow()` (`mathTrade`, `mathKeep`, `mathReplace`, `mathVerdict`). Whenever the math changes, update that text and this section in the same change, then check it on a few cars (a researched model at a researched age, between ages and outside 2–10 years; another model; an "Other" category).
 
 ## 3. Sending results (leads)
 
