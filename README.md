@@ -44,7 +44,7 @@ All of the logic is in the `<script>` at the bottom of `index.html`.
 
 ### Trade-in value
 1. **Reference value.** Each model's base value is what a 2018 car (8 years old) trades in for in 2026.
-   - 17 models have hand-researched ranges (`OVERRIDES`).
+   - 17 models have hand-researched ranges (`OVERRIDES`, 2018 row; rows for 2016–2024 are stored too).
    - Every other model's value is `category base value × brand resale factor × optional model factor` (`SEGMENTS` and `BRANDS`), with a range of ±15%.
 2. **Age:** scaled with a typical depreciation curve (`retention`).
 3. **Mileage:** compared with 12,000 miles/year. The value moves up or down by at most 35%.
@@ -94,7 +94,7 @@ The tool adds up points, and more than 0 points means "Trade it in".
 
 ### Updating the data
 - **Add a model:** add `Model:segment` to its brand's `m:` list in `BRANDS`. To adjust one model's value, add a factor, e.g. `4Runner:msuv:1.3`.
-- **Use a researched range:** add a row to `OVERRIDES`. It replaces the formula for that model.
+- **Use a researched range:** add a row to `OVERRIDES` (`years:{2018:[low, high, "confidence"], ...}`). It replaces the formula for that model. The math uses the `ANCHOR_YEAR` (2018) row; the other years (2016, 2020, 2022, 2024, from Feather's valuation reference CSV of 2026-10-16) are reference points for tuning the age curve. The CSV's master copy is `docs/valuation-reference.csv` in the private calculator repo.
 - **Refresh every year:** the reference values are for 2018 cars priced in 2026. Each year, re-check a few `OVERRIDES` against KBB or Edmunds and nudge the `SEGMENTS` base values to match.
 
 ## 3. Sending results (leads)
