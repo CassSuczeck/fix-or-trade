@@ -6,7 +6,7 @@ A free, 5-step web tool that helps a car owner decide whether to repair their cu
 
 **Status (Sep 28, 2026):** **live** at **besafetravels.com/fix-or-trade**, not linked from the menu, no password. Leads go to the Google Sheet via Apps Script (switched Sep 28). See [Status & next steps](#status--next-steps).
 
-**Project management:** this tool and the `/calculator` are handled from **one** Claude Code chat, which works in both repos. The shared status file is `PROJECT-STATUS.md` → "Goal 2" in the private `CassSuczeck/calculator` repo. **This repo is public and GitHub Pages serves `main`, so any push to `main` changes the live tool.** Don't commit secrets here.
+**Project management:** this tool and the `/calculator` are handled from **one** Claude Code chat, which works in both repos. The shared status file is `PROJECT-STATUS.md` → "Goal 2" in the private `CassSuczeck/website` repo. **This repo is public and GitHub Pages serves `main`, so any push to `main` changes the live tool.** Don't commit secrets here.
 
 | File | What it is |
 |---|---|
